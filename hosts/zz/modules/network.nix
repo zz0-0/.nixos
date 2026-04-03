@@ -7,7 +7,7 @@
 
 {
   networking = {
-    hostName = "zz";
+    hostName = "zz"; # replace with your hostname
     networkmanager = {
       enable = true;
       wifi = {

@@ -20,7 +20,7 @@
     };
 
     devshell = {
-      url = "github:zz0-0/devshell";
+      url = "github:zz0-0/.devshell";
     };
   };
 
@@ -34,7 +34,7 @@
       ...
     }:
     let
-      username = "zz";
+      username = "zz"; # replace with your username
       system = "x86_64-linux";
       systemVersion = "26.05";
       specialArgs = {
