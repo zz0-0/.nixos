@@ -8,4 +8,7 @@
       user.email = "zz11009988@outlook.com";
     };
   };
+  programs.gh = {
+    enable = true;
+  };
 }

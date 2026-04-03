@@ -26,8 +26,8 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1774211631,
-        "narHash": "sha256-eWpcb9CpB24tgEXjsnUCEXhNeWMOgYK4+8dj7gmYfC8=",
+        "lastModified": 1775177382,
+        "narHash": "sha256-nmRaEwnE7OMKolMmg/UIdCMt9vVw4LAHh+5lqajbHF8=",
         "path": "/home/zz/.devshell",
         "type": "path"
       },

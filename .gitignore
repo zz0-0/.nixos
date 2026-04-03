@@ -8,8 +8,5 @@ result-*
 # Home-manager backup files
 *.backup
 
-# Machine-specific hardware configuration (contains disk UUIDs and partition info)
-hosts/zz/hardware-configuration.nix
-
 # Local development binaries
 .bin/
