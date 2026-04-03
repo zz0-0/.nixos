@@ -26,14 +26,17 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1775177382,
-        "narHash": "sha256-nmRaEwnE7OMKolMmg/UIdCMt9vVw4LAHh+5lqajbHF8=",
-        "path": "/home/zz/.devshell",
-        "type": "path"
+        "lastModified": 1775176191,
+        "narHash": "sha256-8IvEoZUBF/4n5mbJi1OQL+UlrktL2Mdp+OCr0YQqLlw=",
+        "owner": "zz0-0",
+        "repo": "devshell",
+        "rev": "056603ac8db54952efbe32cdf0e157f541cd4af0",
+        "type": "github"
       },
       "original": {
-        "path": "/home/zz/.devshell",
-        "type": "path"
+        "owner": "zz0-0",
+        "repo": "devshell",
+        "type": "github"
       }
     },
     "home-manager": {

@@ -20,7 +20,7 @@
     };
 
     devshell = {
-      url = "path:/home/zz/.devshell";
+      url = "github:zz0-0/devshell";
     };
   };
 
@@ -84,7 +84,7 @@
       };
 
       devShells.x86_64-linux.default = devshell.lib.x86_64-linux.nix {
-        extraPackages = [ ];
+        extraPackages = [ home-manager.packages.${system}.default ];
       };
     };
 }
