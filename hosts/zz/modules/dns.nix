@@ -28,13 +28,6 @@
           "https://dns.quad9.net/dns-query"
         ];
       };
-      filtering = {
-        protection_enabled = true;
-        filtering_enabled = true;
-        safe_search = {
-          enabled = true;
-        };
-      };
     };
   };
 }
