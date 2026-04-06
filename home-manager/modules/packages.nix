@@ -22,6 +22,9 @@
     gnome-disk-utility
     evince
 
+    # Ebook
+    calibre
+
     # Remote Desktop
     remmina
 
