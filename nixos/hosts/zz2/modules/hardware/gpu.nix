@@ -19,10 +19,8 @@
     modesetting.enable = true;
     prime = {
       offload.enable = true;
-      # NOTE: Update these Bus IDs after running nixos-generate-config on zz2
-      # Use `lspci | grep -E "VGA|3D"` to find the correct Bus IDs
-      intelBusId = "PCI:0:2:0"; # Update this for zz2
-      nvidiaBusId = "PCI:1:0:0"; # Update this for zz2
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:2:0:0";
     };
     powerManagement.enable = false;
     powerManagement.finegrained = false;
