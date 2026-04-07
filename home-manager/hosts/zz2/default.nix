@@ -5,9 +5,15 @@
   dankMaterialShell,
   username,
   systemVersion,
+  system,
   ...
 }:
 
+let
+  niriPkg = niri.packages.${system}.niri-unstable.overrideAttrs (_: {
+    doCheck = false;
+  });
+in
 {
   programs.home-manager.enable = true;
 
@@ -25,6 +31,9 @@
     ../../shared/services.nix
     ../../shared/shell.nix
     ../../shared/theme.nix
+    {
+      programs.niri.package = niriPkg;
+    }
   ];
 
   home = {

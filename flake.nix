@@ -55,7 +55,7 @@
       };
 
       specialArgs = {
-        inherit username systemVersion;
+        inherit username systemVersion system;
         niri = inputs.niri;
         dankMaterialShell = inputs.dankMaterialShell;
       };
@@ -75,8 +75,13 @@
             "/share/xdg-desktop-portal"
           ];
 
-          # Required by DMS greeter
-          programs.niri.enable = true;
+          # Required by DMS greeter - use niri-unstable with tests disabled
+          programs.niri = {
+            enable = true;
+            package = inputs.niri.packages.${system}.niri-unstable.overrideAttrs (_: {
+              doCheck = false;
+            });
+          };
         }
       ];
     in
