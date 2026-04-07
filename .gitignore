@@ -11,3 +11,5 @@ result-*
 # Local development binaries
 .bin/
 .qwen/
+.vscode
+.zed

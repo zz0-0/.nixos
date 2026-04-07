@@ -14,17 +14,16 @@
   hardware.enableRedistributableFirmware = true;
 
   # Touchpad: Goodix GXTP5100:00 27C6:01E7
-  # Uses the goodix_i2c driver via hid-multitouch / i2c-hid subsystem
+  # Uses hid-multitouch + i2c-hid subsystem (not the goodix module, which is for touchscreens)
   boot.kernelModules = [
     # WiFi
     "iwlwifi"
     "iwlmvm"
     "btintel"
-    # Touchpad - Goodix GXTP5100
+    # Touchpad - Goodix GXTP5100 (handled by hid-multitouch/i2c-hid)
     "i2c-hid"
     "i2c-hid-acpi"
     "hid-multitouch"
-    "goodix"
     "i2c-designware-pci"
     "i2c-designware-core"
   ];
@@ -41,12 +40,18 @@
 
   # If touchpad or WiFi still doesn't work, run these and share output:
   #   dmesg | grep -iE 'i2c|hid|touchpad|elan|synaptics|goodix'
-  #   dmesg | grep -i 'iwlwifi\|8086:e340\|firmware'
   #   libinput list-devices
   #   cat /proc/bus/input/devices | grep -A5 'Touchpad\|elan\|synaptics\|goodix'
+  #   evtest /dev/input/event13  # test touchpad events directly
   #
   # For WiFi specifically, check if firmware loads:
   #   dmesg | grep iwlwifi
   # If you see "firmware: failed to load iwlwifi-gl-b0-fm-b0-XX.ucode",
   # we may need to manually add the firmware file.
+
+  # Debug tools for touchpad/input issues
+  environment.systemPackages = with pkgs; [
+    libinput
+    evtest
+  ];
 }

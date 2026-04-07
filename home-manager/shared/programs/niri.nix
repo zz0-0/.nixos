@@ -172,8 +172,20 @@ in
         };
 
         input.keyboard.numlock = true;
-        input.touchpad.tap = true;
-        input.touchpad.natural-scroll = true;
+        input.touchpad = {
+          enable = true;
+          tap = true;
+          natural-scroll = true;
+          dwt = true;
+          dwtp = false;
+          disabled-on-external-mouse = false;
+          drag = true;
+          drag-lock = false;
+          accel-profile = "adaptive";
+          middle-emulation = false;
+          left-handed = false;
+        };
+        input.touch.enable = true;
         input.focus-follows-mouse.enable = true;
         input.focus-follows-mouse.max-scroll-amount = "0%";
 
