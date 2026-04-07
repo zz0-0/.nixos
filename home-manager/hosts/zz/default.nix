@@ -15,17 +15,16 @@
     niri.homeModules.niri
     dankMaterialShell.homeModules.dank-material-shell
     dankMaterialShell.homeModules.niri
-    ./modules/xdg.nix
-    ./modules/packages.nix
-    ./modules/portals.nix
-    ./modules/programs/dms.nix
-    ./modules/programs/editor.nix
-    ./modules/programs/git.nix
-    ./modules/programs/niri.nix
-    ./modules/services.nix
-    ./modules/shell.nix
-    ./modules/theme.nix
-
+    ../../shared/xdg.nix
+    ../../shared/packages.nix
+    ../../shared/portals.nix
+    ../../shared/programs/dms.nix
+    ../../shared/programs/editor.nix
+    ../../shared/programs/git.nix
+    ../../shared/programs/niri.nix
+    ../../shared/services.nix
+    ../../shared/shell.nix
+    ../../shared/theme.nix
   ];
 
   home = {

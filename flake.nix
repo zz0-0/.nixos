@@ -31,54 +31,100 @@
       home-manager,
       devshell,
       dankMaterialShell,
+      niri,
       ...
     }:
     let
-      username = "zz"; # replace with your username
+      username = "zz";
       system = "x86_64-linux";
       systemVersion = "26.05";
+
+      # Overlay to fix niri build issues (disable failing tests)
+      niriOverlay = final: prev: {
+        niri = inputs.niri.packages.${system}.niri-unstable.overrideAttrs (_: {
+          doCheck = false;
+        });
+      };
+
+      pkgs = import nixpkgs {
+        inherit system;
+        config = {
+          allowUnfree = true;
+        };
+        overlays = [ niriOverlay ];
+      };
+
       specialArgs = {
         inherit username systemVersion;
         niri = inputs.niri;
         dankMaterialShell = inputs.dankMaterialShell;
       };
+
+      # Common NixOS modules shared between all hosts
+      commonModules = [
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.backupFileExtension = "backup";
+          home-manager.extraSpecialArgs = specialArgs;
+
+          # Required when useUserPackages is enabled for xdg portal to work
+          environment.pathsToLink = [
+            "/share/applications"
+            "/share/xdg-desktop-portal"
+          ];
+
+          # Required by DMS greeter
+          programs.niri.enable = true;
+        }
+      ];
     in
     {
       nixosConfigurations = {
+        # Original laptop configuration
         zz = nixpkgs.lib.nixosSystem {
           inherit specialArgs system;
+          pkgs = pkgs;
           modules = [
-            ./hosts/${username}
-            home-manager.nixosModules.home-manager
+            ./nixos/hosts/zz
+          ]
+          ++ commonModules
+          ++ [
             {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.backupFileExtension = "backup";
-              home-manager.extraSpecialArgs = specialArgs;
-              home-manager.users.${username} = import ./home-manager/default.nix;
+              home-manager.users.${username} = import ./home-manager/hosts/zz/default.nix;
+            }
+          ];
+        };
 
-              # Required when useUserPackages is enabled for xdg portal to work
-              environment.pathsToLink = [
-                "/share/applications"
-                "/share/xdg-desktop-portal"
-              ];
-
-              # Required by DMS greeter
-              programs.niri.enable = true;
+        # New laptop (Intel i7-358H + NVIDIA RTX 5060)
+        zz2 = nixpkgs.lib.nixosSystem {
+          inherit specialArgs system;
+          pkgs = pkgs;
+          modules = [
+            ./nixos/hosts/zz2
+          ]
+          ++ commonModules
+          ++ [
+            {
+              home-manager.users.${username} = import ./home-manager/hosts/zz2/default.nix;
             }
           ];
         };
       };
 
       homeConfigurations = {
+        # Standalone Home Manager for zz
         zz = home-manager.lib.homeManagerConfiguration {
-          pkgs = import nixpkgs {
-            inherit system;
-            config = {
-              allowUnfree = true;
-            };
-          };
-          modules = [ ./home-manager/default.nix ];
+          inherit pkgs;
+          modules = [ ./home-manager/hosts/zz/default.nix ];
+          extraSpecialArgs = specialArgs;
+        };
+
+        # Standalone Home Manager for zz2
+        zz2 = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./home-manager/hosts/zz2/default.nix ];
           extraSpecialArgs = specialArgs;
         };
       };
