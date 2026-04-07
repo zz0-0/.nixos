@@ -43,7 +43,6 @@
     wl-mirror
     i2c-tools
     matugen
-    fprintd
 
     # AI Agents
     # claude-code

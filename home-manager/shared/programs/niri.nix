@@ -54,6 +54,9 @@ let
     # Position monitors contiguously
     x_position=0
 
+    # Get the width of eDP-1 for positioning calculations
+    edp1_width=3200  # Default for zz2 (3200x2000)
+
     # Always position AU11601000458 first (leftmost)
     if [[ -n "$monitor_11601000458_connector" ]]; then
       echo "Positioning AU11601000458 ($monitor_11601000458_connector) at $x_position,0"
@@ -193,20 +196,6 @@ in
         # cursor.size = 24;
 
         gestures.hot-corners.enable = false;
-
-        outputs = {
-          "eDP-1" = {
-            mode = {
-              width = 1920;
-              height = 1080;
-              refresh = 143.999;
-            };
-            position = {
-              x = 0;
-              y = 0;
-            };
-          };
-        };
 
         layout.gaps = 16;
         layout.center-focused-column = "never";

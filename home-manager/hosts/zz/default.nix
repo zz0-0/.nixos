@@ -28,6 +28,7 @@ in
     ../../shared/programs/editor.nix
     ../../shared/programs/git.nix
     ../../shared/programs/niri.nix
+    ./niri-outputs.nix
     ../../shared/services.nix
     ../../shared/shell.nix
     ../../shared/theme.nix

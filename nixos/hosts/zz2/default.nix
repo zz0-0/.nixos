@@ -6,7 +6,7 @@
     ../../shared/fonts.nix
     ../../shared/hardware.nix
     ./modules/hardware/bluetooth.nix
-    ./modules/hardware/goodix-touchpad.nix
+    ./modules/hardware/goodix-custom-driver.nix
     ./modules/hardware/gpu.nix
     ./modules/hardware/peripherals.nix
     ../../shared/i18n.nix

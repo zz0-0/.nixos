@@ -13,17 +13,12 @@
   # Ensure firmware is available
   hardware.enableRedistributableFirmware = true;
 
-  # Touchpad: Goodix GXTP5100:00 27C6:01E7
-  # Uses hid-multitouch + i2c-hid subsystem (not the goodix module, which is for touchscreens)
   boot.kernelModules = [
     # WiFi
     "iwlwifi"
     "iwlmvm"
     "btintel"
-    # Touchpad - Goodix GXTP5100 (handled by hid-multitouch/i2c-hid)
-    "i2c-hid"
-    "i2c-hid-acpi"
-    "hid-multitouch"
+    # I2C controllers (needed for the Goodix touchpad, handled by goodix-gt7868q driver)
     "i2c-designware-pci"
     "i2c-designware-core"
   ];
