@@ -10,3 +10,4 @@ result-*
 
 # Local development binaries
 .bin/
+.qwen/
