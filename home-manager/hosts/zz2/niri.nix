@@ -155,10 +155,7 @@ in
       # KDL config for internal display output (make/model - stable across dock connector changes)
       config = with kdl; [
         (node "output"
-          {
-            make = "BOE";
-            model = "NS160MZ0-M00";
-          }
+          [ "BOE" "NS160MZ0-M00" ]
           [
             (leaf "mode" {
               width = 3200;
