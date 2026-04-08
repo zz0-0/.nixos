@@ -5,12 +5,17 @@
   ...
 }:
 
-# Custom Goodix GT7868Q driver for GXTP5100 touchpad
-# GitHub: https://github.com/ty2/goodix-gt7868q-linux-driver
-# This driver handles touchpads that fail with standard hid-multitouch due to HID descriptor issues
+# Goodix GT7868Q touchpad configuration for GXTP5100
+#
+# The touchpad generates proper X/Y events, but libinput uses pressure-based
+# touch detection with autodetected thresholds (200:240) that are way too high
+# for this device (actual touch pressure is 34-80). This causes libinput to
+# reject all touches.
+#
+# Fix: Patch the bundled hid-multitouch.c to not register ABS_MT_PRESSURE.
+# This forces libinput to fall back to BTN_TOUCH-based detection, which works.
 
 let
-  # Fetch the driver source with correct hash
   goodix-src = pkgs.fetchFromGitHub {
     owner = "ty2";
     repo = "goodix-gt7868q-linux-driver";
@@ -18,25 +23,29 @@ let
     hash = "sha256-n1Xws5uEtFNenZau32cXvYyiUbhKvUlUf3LCcYZoD/Y=";
   };
 
-  # Build the kernel module against the current kernel
   goodix-gt7868q = config.boot.kernelPackages.stdenv.mkDerivation {
     pname = "goodix-gt7868q";
     version = "unstable";
-
-    # Use the original source (which includes hid-multitouch.c)
     src = goodix-src;
-
     nativeBuildInputs = [ config.boot.kernelPackages.kernel.dev ];
 
-    # Patch for kernel 6.18+ timer API compatibility and add 0x01E7 device support
     postPatch = ''
       # Fix timer API changes in kernel 6.18+
       sed -i 's/del_timer(&td->release_timer)/timer_delete(\&td->release_timer)/g' hid-multitouch.c
       sed -i 's/del_timer_sync(&td->release_timer)/timer_delete_sync(\&td->release_timer)/g' hid-multitouch.c
       sed -i 's/struct mt_device \*td = from_timer(td, t, release_timer)/struct mt_device *td = container_of(t, struct mt_device, release_timer)/g' hid-multitouch.c
 
-      # Add 0x01E7 device support
+      # Add device ID 0x01E7
       sed -i '/0x01E8/a\\t    { HID_I2C_DEVICE(I2C_VENDOR_ID_GOODIX, 0x01E7) },' goodix-gt7868q.c
+
+      # Disable ABS_MT_PRESSURE registration to work around broken pressure
+      # thresholds (device reports 8-46, but libinput autodetects 200:240).
+      # Without ABS_MT_PRESSURE, libinput falls back to BTN_TOUCH-based
+      # touch detection, which works correctly.
+      # 1. Don't register the ABS_MT_PRESSURE axis in input mapping (spans 2 lines)
+      sed -i '/case HID_DG_TIPPRESSURE:/,/return 1;/{/set_abs(hi->input, ABS_MT_PRESSURE, field,/d; /cls->sn_pressure);/d; /MT_STORE_FIELD(p);/d}' hid-multitouch.c
+      # 2. Don't emit ABS_MT_PRESSURE events in process_slot
+      sed -i '/input_event(input, EV_ABS, ABS_MT_PRESSURE, \*slot->p);/d' hid-multitouch.c
     '';
 
     buildPhase = ''
@@ -50,21 +59,7 @@ let
   };
 in
 {
-  # Install the custom Goodix driver
   boot.extraModulePackages = [ goodix-gt7868q ];
-
-  # Load the custom driver module
   boot.kernelModules = [ "goodix-gt7868q" ];
-
-  # Blacklist the stock hid-multitouch and i2c-hid-acpi to prevent conflicts
-  # The custom driver bundles its own patched hid-multitouch.c
-  boot.blacklistedKernelModules = [
-    "hid-multitouch"
-    "i2c_hid_acpi"
-  ];
-
-  # Copy the libinput quirks file from the driver repository
-  # This fixes pressure threshold issues that prevent cursor movement
-  environment.etc."libinput/60-custom-goodix-gt7868q.quirks".source =
-    "${goodix-src}/local-overrides.quirks";
+  boot.blacklistedKernelModules = [ "hid-multitouch" ];
 }

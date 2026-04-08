@@ -188,7 +188,6 @@ in
           middle-emulation = false;
           left-handed = false;
         };
-        input.touch.enable = true;
         input.focus-follows-mouse.enable = true;
         input.focus-follows-mouse.max-scroll-amount = "0%";
 

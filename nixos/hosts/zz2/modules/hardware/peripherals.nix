@@ -18,7 +18,7 @@
     "iwlwifi"
     "iwlmvm"
     "btintel"
-    # I2C controllers (needed for the Goodix touchpad, handled by goodix-gt7868q driver)
+    # I2C controllers (needed for the Goodix touchpad via i2c_hid_acpi + hid-multitouch)
     "i2c-designware-pci"
     "i2c-designware-core"
   ];
