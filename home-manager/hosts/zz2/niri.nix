@@ -2,93 +2,99 @@
   config,
   pkgs,
   inputs,
-
   ...
 }:
 
 let
+  # Inline KDL helpers (mirrors niri-flake's kdl.nix)
+  kdl =
+    let
+      fold-args =
+        pkgs.lib.foldl
+          (
+            self: arg:
+            if pkgs.lib.isAttrs arg then
+              self // { properties = self.properties // arg; }
+            else
+              self // { arguments = self.arguments ++ [ arg ]; }
+          )
+          {
+            arguments = [ ];
+            properties = { };
+          };
+      node = name: args: children: {
+        inherit name;
+        inherit (fold-args (pkgs.lib.toList args)) arguments properties;
+        inherit children;
+      };
+      leaf = name: args: node name args [ ];
+    in
+    {
+      inherit node leaf;
+    };
+
   # Script to configure niri outputs based on connected monitors
   configureNiriOutputsScript = pkgs.writeShellScriptBin "configure-niri-outputs" ''
     set -euo pipefail
 
-    # Wait a bit for niri to be ready
     echo "Waiting for niri to be ready..."
     sleep 3
 
-    # Get list of connected outputs from niri
     connected_outputs=$("${pkgs.niri}/bin/niri" msg outputs 2>/dev/null || true)
 
-    # Parse outputs to identify monitors by serial number
-    edp1_found=false
+    internal_found=false
+    internal_connector=""
     monitor_11601000458_connector=""
     monitor_11709001774_connector=""
 
     echo "Detecting monitors..."
 
     while IFS= read -r line; do
-      # Extract connector name (text in parentheses)
       connector=$(echo "$line" | sed -n 's/.*(\([^)]*\)).*/\1/p')
       if [[ -n "$connector" ]]; then
-
-        # Check for eDP-1 (laptop display)
-        if [[ "$connector" == "eDP-1" ]]; then
-          edp1_found=true
-          echo "Found laptop display: $connector"
+        if [[ "$line" == *"BOE NS160MZ0-M00"* || "$line" == *"BOE083C"* ]]; then
+          internal_found=true
+          internal_connector="$connector"
+          echo "Found internal laptop display: $connector (BOE NS160MZ0-M00)"
           continue
         fi
-
-        # Check if this line contains monitor serial numbers
         if [[ "$line" == *"AU11601000458"* ]]; then
           monitor_11601000458_connector="$connector"
           echo "Found AU11601000458 on connector: $connector"
         elif [[ "$line" == *"AU11709001774"* ]]; then
           monitor_11709001774_connector="$connector"
           echo "Found AU11709001774 on connector: $connector"
-        elif [[ "$connector" == "DP-2" || "$connector" == "DP-3" ]]; then
-          # These might be the Philips monitors but we couldn't identify by serial
-          echo "Found external monitor on connector: $connector (serial unknown)"
         fi
       fi
     done <<< "$connected_outputs"
 
-    # Position monitors contiguously
     x_position=0
 
-    # Get the width of eDP-1 for positioning calculations
-    edp1_width=3200  # Default for zz2 (3200x2000)
-
-    # Always position AU11601000458 first (leftmost)
     if [[ -n "$monitor_11601000458_connector" ]]; then
       echo "Positioning AU11601000458 ($monitor_11601000458_connector) at $x_position,0"
       "${pkgs.niri}/bin/niri" msg output "$monitor_11601000458_connector" position set $x_position 0 || true
       x_position=$((x_position + 1920))
     fi
 
-    # Always position AU11709001774 second (middle)
     if [[ -n "$monitor_11709001774_connector" ]]; then
       echo "Positioning AU11709001774 ($monitor_11709001774_connector) at $x_position,0"
       "${pkgs.niri}/bin/niri" msg output "$monitor_11709001774_connector" position set $x_position 0 || true
       x_position=$((x_position + 1920))
     fi
 
-    # Position eDP-1 last (rightmost)
-    if [[ "$edp1_found" == true ]]; then
-      echo "Positioning eDP-1 (laptop display) at $x_position,0"
-      "${pkgs.niri}/bin/niri" msg output "eDP-1" position set $x_position 0 || true
+    if [[ "$internal_found" == true && -n "$internal_connector" ]]; then
+      echo "Positioning internal display ($internal_connector) at $x_position,0"
+      "${pkgs.niri}/bin/niri" msg output "$internal_connector" position set $x_position 0 || true
     else
-      echo "Warning: eDP-1 not found, using default position 0,0"
-      "${pkgs.niri}/bin/niri" msg output "eDP-1" position set 0 0 || true
+      echo "Warning: Internal laptop display not found"
     fi
 
-    # Wait for configuration to take effect
     echo "Waiting for configuration to settle..."
     sleep 2
 
-    # Verify configuration - ensure monitors are positioned contiguously
     echo "Verifying monitor positions..."
     "${pkgs.niri}/bin/niri" msg outputs 2>/dev/null | grep -A1 "Output " || true
 
-    # Additional verification: check for gaps
     echo "Checking for gaps in monitor layout..."
     positions=$("${pkgs.niri}/bin/niri" msg outputs 2>/dev/null | grep "Logical position:" | sed 's/.*Logical position: \([0-9]\+\),.*/\1/' | sort -n || true)
 
@@ -99,7 +105,6 @@ let
           gap=$((pos - prev_pos))
           if [[ $gap -gt 1920 ]]; then
             echo "WARNING: Large gap detected between monitors: $prev_pos to $pos (gap: $gap pixels)"
-            echo "This may cause mouse confinement issues in games!"
           elif [[ $gap -lt 1920 ]]; then
             echo "WARNING: Monitors may be overlapping or too close: $prev_pos to $pos (gap: $gap pixels)"
           fi
@@ -108,54 +113,67 @@ let
       done
     fi
 
-    echo "Output configuration complete - ensure monitors are contiguous for proper mouse movement"
+    echo "Output configuration complete"
 
-    # Assign workspaces based on connected monitors
     echo "Configuring workspace assignments..."
     if [[ -n "$monitor_11601000458_connector" ]]; then
         echo "Moving workspace 'mail' to monitor $monitor_11601000458_connector"
         "${pkgs.niri}/bin/niri" msg action focus-workspace "mail" || true
         "${pkgs.niri}/bin/niri" msg action move-workspace-to-monitor "$monitor_11601000458_connector" || true
     else
-        echo "No external monitor found, keeping workspace 'mail' on eDP-1"
-        "${pkgs.niri}/bin/niri" msg action focus-workspace "mail" || true
-        "${pkgs.niri}/bin/niri" msg action move-workspace-to-monitor "eDP-1" || true
+        echo "No external monitor found, keeping workspace 'mail' on internal display"
+        if [[ "$internal_found" == true && -n "$internal_connector" ]]; then
+          "${pkgs.niri}/bin/niri" msg action focus-workspace "mail" || true
+          "${pkgs.niri}/bin/niri" msg action move-workspace-to-monitor "$internal_connector" || true
+        fi
     fi
 
-    # Refocus dev workspace
     echo "Refocusing workspace 'dev'"
     "${pkgs.niri}/bin/niri" msg action focus-workspace "dev" || true
 
     echo "Workspace configuration complete"
   '';
 
-  # Script to ensure focus stays on dev workspace at startup
   startupFocusDevScript = pkgs.writeShellScriptBin "startup-focus-dev" ''
     set -euo pipefail
-
     echo "Ensuring focus stays on dev workspace..."
-
-    # Wait for applications to start and settle
     echo "Waiting 8 seconds for applications to start..."
     sleep 8
-
-    # Focus dev workspace
     echo "Focusing dev workspace..."
     "${pkgs.niri}/bin/niri" msg action focus-workspace "dev" || true
-
-    # Wait a bit more and do it again to be sure
     echo "Waiting 2 more seconds..."
     sleep 2
     "${pkgs.niri}/bin/niri" msg action focus-workspace "dev" || true
-
     echo "Startup focus configuration complete"
   '';
 in
 {
-
   config = {
     programs.niri = {
       enable = true;
+
+      # KDL config for internal display output (make/model - stable across dock connector changes)
+      config = with kdl; [
+        (node "output"
+          {
+            make = "BOE";
+            model = "NS160MZ0-M00";
+          }
+          [
+            (leaf "mode" {
+              width = 3200;
+              height = 2000;
+              refresh = 165.0;
+            })
+            (leaf "scale" 1.75)
+            (leaf "position" {
+              x = 0;
+              y = 0;
+            })
+          ]
+        )
+      ];
+
       settings = {
         screenshot-path = "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png";
         hotkey-overlay.skip-at-startup = true;
@@ -163,10 +181,16 @@ in
 
         workspaces = {
           "dev" = {
-            open-on-output = "eDP-1";
+            open-on-output = {
+              make = "BOE";
+              model = "NS160MZ0-M00";
+            };
           };
           "mail" = {
-            open-on-output = "eDP-1";
+            open-on-output = {
+              make = "BOE";
+              model = "NS160MZ0-M00";
+            };
           };
         };
 
@@ -190,9 +214,6 @@ in
         };
         input.focus-follows-mouse.enable = true;
         input.focus-follows-mouse.max-scroll-amount = "0%";
-
-        # cursor.theme = "phinger-cursors-light";
-        # cursor.size = 24;
 
         gestures.hot-corners.enable = false;
 
@@ -436,7 +457,7 @@ in
           # Window sizing
           "Mod+BracketLeft".action.consume-or-expel-window-left = [ ];
           "Mod+BracketRight".action.consume-or-expel-window-right = [ ];
-          "Mod+Semicolon".action.consume-window-into-column = [ ]; # Mod+Comma conflicts with DMS
+          "Mod+Semicolon".action.consume-window-into-column = [ ];
           "Mod+Period".action.expel-window-from-column = [ ];
           "Mod+R".action.switch-preset-column-width = [ ];
           "Mod+Shift+R".action.switch-preset-window-height = [ ];
@@ -452,7 +473,7 @@ in
           "Mod+Shift+Equal".action.set-window-height = "+10%";
 
           # Window modes
-          "Mod+B".action.toggle-window-floating = [ ]; # Mod+V conflicts with DMS
+          "Mod+B".action.toggle-window-floating = [ ];
           "Mod+Shift+B".action.switch-focus-between-floating-and-tiling = [ ];
           "Mod+W".action.toggle-column-tabbed-display = [ ];
 

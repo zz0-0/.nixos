@@ -25,7 +25,12 @@
 
   # GNOME Keyring - auto-unlock on login
   services.gnome.gnome-keyring.enable = true;
+  # Enable keyring auto-unlock for all relevant PAM services
+  # This ensures the keyring is unlocked regardless of how you authenticate
+  security.pam.services.login.enableGnomeKeyring = true;
+  security.pam.services.systemd-user.enableGnomeKeyring = true;
   security.pam.services.dms-greeter.enableGnomeKeyring = true;
+  security.pam.services.sudo.enableGnomeKeyring = true;
 
   # U2F / FIDO2 security key authentication
   security.pam.u2f = {
