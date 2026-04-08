@@ -22,6 +22,9 @@
     gnome-disk-utility
     evince
 
+    # Gaming
+    heroic
+
     # Ebook
     calibre
 
