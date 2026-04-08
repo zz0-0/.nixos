@@ -23,6 +23,10 @@
     # tod = enable;  # Goodix sensors use the "tod" (Touch On Demand) driver
   };
 
+  # GNOME Keyring - auto-unlock on login
+  services.gnome.gnome-keyring.enable = true;
+  security.pam.services.dms-greeter.enableGnomeKeyring = true;
+
   # U2F / FIDO2 security key authentication
   security.pam.u2f = {
     enable = true;
