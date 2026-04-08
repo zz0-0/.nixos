@@ -1,39 +1,12 @@
 {
   config,
   pkgs,
-  inputs,
   ...
 }:
 
 let
-  # Inline KDL helpers (mirrors niri-flake's kdl.nix)
-  kdl =
-    let
-      fold-args =
-        pkgs.lib.foldl
-          (
-            self: arg:
-            if pkgs.lib.isAttrs arg then
-              self // { properties = self.properties // arg; }
-            else
-              self // { arguments = self.arguments ++ [ arg ]; }
-          )
-          {
-            arguments = [ ];
-            properties = { };
-          };
-      node = name: args: children: {
-        inherit name;
-        inherit (fold-args (pkgs.lib.toList args)) arguments properties;
-        inherit children;
-      };
-      leaf = name: args: node name args [ ];
-    in
-    {
-      inherit node leaf;
-    };
-
   # Script to configure niri outputs based on connected monitors
+  # Detects monitors by make/model string so connector names don't matter
   configureNiriOutputsScript = pkgs.writeShellScriptBin "configure-niri-outputs" ''
     set -euo pipefail
 
@@ -68,6 +41,10 @@ let
       fi
     done <<< "$connected_outputs"
 
+    # Position all monitors left to right in order:
+    # 1. AU11601000458 (external 1)
+    # 2. AU11709001774 (external 2)
+    # 3. Internal BOE display (laptop screen - always last/third)
     x_position=0
 
     if [[ -n "$monitor_11601000458_connector" ]]; then
@@ -82,11 +59,14 @@ let
       x_position=$((x_position + 1920))
     fi
 
+    # Configure internal display (3200x2000 @ 165Hz, scale 1.75) — position AFTER externals
     if [[ "$internal_found" == true && -n "$internal_connector" ]]; then
-      echo "Positioning internal display ($internal_connector) at $x_position,0"
+      echo "Configuring internal display ($internal_connector): 3200x2000 @ 165Hz, scale 1.75, position $x_position,0"
+      "${pkgs.niri}/bin/niri" msg output "$internal_connector" mode set 3200 2000 165 || true
+      "${pkgs.niri}/bin/niri" msg output "$internal_connector" scale set 1.75 || true
       "${pkgs.niri}/bin/niri" msg output "$internal_connector" position set $x_position 0 || true
     else
-      echo "Warning: Internal laptop display not found"
+      echo "Warning: Internal laptop display not found, skipping configuration"
     fi
 
     echo "Waiting for configuration to settle..."
@@ -152,25 +132,6 @@ in
     programs.niri = {
       enable = true;
 
-      # KDL config for internal display output (make/model - stable across dock connector changes)
-      config = with kdl; [
-        (node "output"
-          [ "BOE" "NS160MZ0-M00" ]
-          [
-            (leaf "mode" {
-              width = 3200;
-              height = 2000;
-              refresh = 165.0;
-            })
-            (leaf "scale" 1.75)
-            (leaf "position" {
-              x = 0;
-              y = 0;
-            })
-          ]
-        )
-      ];
-
       settings = {
         screenshot-path = "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png";
         hotkey-overlay.skip-at-startup = true;
@@ -178,16 +139,10 @@ in
 
         workspaces = {
           "dev" = {
-            open-on-output = {
-              make = "BOE";
-              model = "NS160MZ0-M00";
-            };
+            open-on-output = "eDP-1";
           };
           "mail" = {
-            open-on-output = {
-              make = "BOE";
-              model = "NS160MZ0-M00";
-            };
+            open-on-output = "eDP-1";
           };
         };
 
