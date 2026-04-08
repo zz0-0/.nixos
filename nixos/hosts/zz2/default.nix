@@ -12,7 +12,7 @@
     ./modules/hardware/usb-dock.nix
     ../../shared/i18n.nix
     ./modules/network.nix
-    ./modules/pam-keyring.nix
+    ./modules/no-keyring.nix
     ../../shared/nix.nix
     ../../shared/programs/steam.nix
     ../../shared/security.nix
