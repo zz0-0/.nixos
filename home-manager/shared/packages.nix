@@ -22,6 +22,9 @@
     gnome-disk-utility
     evince
 
+    # Download Manager
+    gopeed
+
     # Gaming
     heroic
 
