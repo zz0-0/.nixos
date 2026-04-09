@@ -2,6 +2,13 @@
 
 {
   security.polkit.enable = true;
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+      }
+    });
+  '';
 
   # GNOME Keyring - auto-unlock on login
   services.gnome.gnome-keyring.enable = true;

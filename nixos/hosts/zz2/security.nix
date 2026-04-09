@@ -2,6 +2,13 @@
 
 {
   security.polkit.enable = true;
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+      }
+    });
+  '';
 
   # Fingerprint authentication (zz2 only - zz has no fingerprint reader)
   services.fprintd = {
