@@ -6,20 +6,27 @@
 }:
 
 {
+  # System-level environment variables for NVIDIA GPU offload
+  # Games and applications can detect and use the NVIDIA GPU
+  environment.variables = {
+    __NV_PRIME_RENDER_OFFLOAD = "1";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+  };
+
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
   };
 
   hardware.nvidia = {
-    open = false;
+    # RTX 5060 (Blackwell) requires open kernel modules
+    open = true;
     package = config.boot.kernelPackages.nvidiaPackages.latest;
     nvidiaSettings = true;
     modesetting.enable = true;
     prime = {
-      # Sync mode - both GPUs drive displays, enables HDMI output
-      # (NVIDIA as primary, internal display via reverse PRIME)
-      sync.enable = true;
+      # Offload mode - NVIDIA GPU only used when explicitly requested, saves battery
+      offload.enable = true;
       intelBusId = "PCI:0:2:0";
       nvidiaBusId = "PCI:2:0:0";
     };

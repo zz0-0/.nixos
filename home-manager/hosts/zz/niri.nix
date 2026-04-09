@@ -122,28 +122,6 @@ let
 
     echo "Workspace configuration complete"
   '';
-
-  # Script to ensure focus stays on dev workspace at startup
-  startupFocusDevScript = pkgs.writeShellScriptBin "startup-focus-dev" ''
-    set -euo pipefail
-
-    echo "Ensuring focus stays on dev workspace..."
-
-    # Wait for applications to start and settle
-    echo "Waiting 8 seconds for applications to start..."
-    sleep 8
-
-    # Focus dev workspace
-    echo "Focusing dev workspace..."
-    "${pkgs.niri}/bin/niri" msg action focus-workspace "dev" || true
-
-    # Wait a bit more and do it again to be sure
-    echo "Waiting 2 more seconds..."
-    sleep 2
-    "${pkgs.niri}/bin/niri" msg action focus-workspace "dev" || true
-
-    echo "Startup focus configuration complete"
-  '';
 in
 {
   config = {
@@ -222,11 +200,6 @@ in
           {
             command = [
               "${configureNiriOutputsScript}/bin/configure-niri-outputs"
-            ];
-          }
-          {
-            command = [
-              "${startupFocusDevScript}/bin/startup-focus-dev"
             ];
           }
           {

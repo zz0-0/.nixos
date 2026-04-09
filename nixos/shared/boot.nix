@@ -17,6 +17,7 @@
     kernelParams = [
       "nvidia_drm.modeset=1"
       "nvidia_drm.fbdev=1"
+      "pcie_aspm=off"
     ];
   };
 }

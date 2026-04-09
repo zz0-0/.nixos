@@ -21,7 +21,6 @@ in
     niri.homeModules.niri
     dankMaterialShell.homeModules.dank-material-shell
     dankMaterialShell.homeModules.niri
-    ../../shared/xdg.nix
     ../../shared/packages.nix
     ../../shared/portals.nix
     ../../shared/programs/dms.nix

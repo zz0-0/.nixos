@@ -58,4 +58,11 @@
     github-copilot-cli
   ];
 
+  # Environment variables for NVIDIA GPU in gaming
+  # These help Heroic and Wine/Proton games detect and use the NVIDIA GPU
+  home.sessionVariables = {
+    # Tell Vulkan/OpenGL to prefer NVIDIA GPU
+    __NV_PRIME_RENDER_OFFLOAD = "1";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+  };
 }
