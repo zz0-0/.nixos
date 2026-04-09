@@ -12,10 +12,10 @@
     ./modules/hardware/usb-dock.nix
     ../../shared/i18n.nix
     ./modules/network.nix
-    ./modules/no-keyring.nix
+    ./modules/shutdown-fix.nix
     ../../shared/nix.nix
     ../../shared/programs/steam.nix
-    ../../shared/security.nix
+    ./security.nix
     ../../shared/services.nix
     ./modules/storage.nix
     ../../shared/users.nix

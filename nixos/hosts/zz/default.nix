@@ -11,7 +11,7 @@
     ./modules/network.nix
     ../../shared/nix.nix
     ../../shared/programs/steam.nix
-    ../../shared/security.nix
+    ./security.nix
     ../../shared/services.nix
     ./modules/storage.nix
     ../../shared/users.nix
