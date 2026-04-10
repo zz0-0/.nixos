@@ -6,23 +6,19 @@
 }:
 
 {
-  # Thunderbolt/USB4 dock support (HP Thunderbolt Dock G2)
-  # Ensures proper authorization and power management for dock-connected devices
+  # HP Thunderbolt Dock G2 support
+  # Works in USB-C mode (like on zz) — no Thunderbolt bolt service needed.
+  # The dock falls back to standard USB-C + DisplayPort alt mode, which
+  # works reliably on this hardware (Thunderbolt USB tunnel is broken on
+  # newer Intel platforms).
 
-  # Thunderbolt service - authorize connected devices
-  services.hardware.bolt.enable = true;
-
-  # Kernel parameters for dock stability
+  # Disable USB autosuspend for dock-connected devices
+  # This prevents the dock from powering down USB ports for mouse/keyboard
   boot.kernelParams = [
-    # Disable USB autosuspend globally (prevents dock USB ports from sleeping)
     "usbcore.autosuspend=-1"
-    # Disable USB power savings on the xhci controller (helps dock USB tunnel)
-    "usbcore.old_scheme_first=1"
-    # Disable PCIe ASPM power saving that can interfere with Thunderbolt
-    "pcie_aspm=off"
   ];
 
-  # udev rules for USB dock power management
+  # udev rules to disable power management for USB devices
   services.udev.extraRules = ''
     # Disable USB autosuspend for all USB devices (dock mouse/keyboard)
     ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="on"
@@ -34,20 +30,8 @@
     ACTION=="add", SUBSYSTEM=="hid", DRIVERS=="usbhid", ATTR{power/control}="on"
   '';
 
-  # Ensure USB4/Thunderbolt controllers are properly initialized
-  boot.kernelModules = [ "thunderbolt" ];
-
   # USB HID polling optimization (reduces mouse lag)
   boot.extraModprobeConfig = ''
     options usbhid mousepoll=0
   '';
-
-  # ============================================================
-  # FALLBACK: If Thunderbolt USB tunnel fails (dock mouse/keyboard
-  # don't work), connect a USB-A cable from the dock's upstream
-  # USB-A port to the laptop's USB-A port.
-  #
-  # The autosuspend/power rules above will also apply to this
-  # fallback connection, keeping mouse/keyboard responsive.
-  # ============================================================
 }

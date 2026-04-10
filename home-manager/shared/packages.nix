@@ -56,6 +56,9 @@
     qwen-code
     codex
     github-copilot-cli
+
+    # Encrypted Folder
+    gocryptfs
   ];
 
   # Environment variables for NVIDIA GPU in gaming
