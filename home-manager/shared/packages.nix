@@ -29,7 +29,7 @@
     heroic
 
     # Ebook
-    calibre
+    koodo-reader
 
     # Remote Desktop
     remmina
