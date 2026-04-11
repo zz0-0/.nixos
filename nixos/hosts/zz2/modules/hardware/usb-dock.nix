@@ -14,8 +14,14 @@
 
   # Disable USB autosuspend for dock-connected devices
   # This prevents the dock from powering down USB ports for mouse/keyboard
+
+  # CRITICAL FIX: Disable ASPM for PCIe to prevent Thunderbolt USB controller
+  # from crashing (xhci_hcd "HC died" error). The Titan Ridge controller in
+  # the HP Dock G2 has known ASPM compatibility issues on newer kernels.
   boot.kernelParams = [
     "usbcore.autosuspend=-1"
+    "pcie_aspm=off"
+    "thunderbolt.nhi_hotplug=1"
   ];
 
   # udev rules to disable power management for USB devices

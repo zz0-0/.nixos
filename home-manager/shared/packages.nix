@@ -40,6 +40,7 @@
 
     # Media & Document Applications
     celluloid
+    libreoffice-fresh
 
     # Wayland & DMS Utilities
     xwayland-satellite

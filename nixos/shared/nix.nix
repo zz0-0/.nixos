@@ -14,6 +14,8 @@
       always-allow-substitutes = true;
       max-jobs = "auto";
       cores = 0;
+      # Make DNS resolution work inside sandbox when using local DNS (AdGuardHome)
+      extra-sandbox-paths = [ "/etc/resolv.conf" ];
     };
     gc = {
       automatic = true;
