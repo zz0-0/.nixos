@@ -9,7 +9,6 @@
     ./modules/hardware/goodix-custom-driver.nix
     ./modules/hardware/gpu.nix
     ./modules/hardware/peripherals.nix
-    ./modules/hardware/usb-dock.nix
     ../../shared/i18n.nix
     ./modules/network.nix
     ./modules/shutdown-fix.nix

@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   security.polkit.enable = true;
@@ -17,10 +22,6 @@
 
   # GNOME Keyring - auto-unlock on login (needed for Evolution email passwords)
   services.gnome.gnome-keyring.enable = true;
-  security.pam.services.login.enableGnomeKeyring = true;
-  security.pam.services.systemd-user.enableGnomeKeyring = true;
-  security.pam.services.dms-greeter.enableGnomeKeyring = true;
-  security.pam.services.sudo.enableGnomeKeyring = true;
 
   # U2F / FIDO2 security key authentication
   security.pam.u2f = {
@@ -29,8 +30,4 @@
       cue = true;
     };
   };
-
-  # Fix: lock screen keeps polling fingerprint scanner repeatedly.
-  # Disable fingerprint for the lock screen PAM service so it only accepts password.
-  security.pam.services.swaylock.fprintAuth = false;
 }

@@ -18,6 +18,8 @@
     enable32Bit = true;
   };
 
+  hardware.intel-gpu-tools.enable = true;
+
   hardware.nvidia = {
     # RTX 5060 (Blackwell) requires open kernel modules
     open = true;
@@ -30,7 +32,16 @@
       intelBusId = "PCI:0:2:0";
       nvidiaBusId = "PCI:2:0:0";
     };
-    powerManagement.enable = false;
-    powerManagement.finegrained = false;
+    powerManagement.enable = true;
+    powerManagement.finegrained = true;
   };
+
+  powerManagement = {
+    enable = true;
+    powertop.enable = true;
+    cpuFreqGovernor = "schedutil"; # power, performance, ondemand
+  };
+
+  hardware.system76.power-daemon.enable = true;
+  services.system76-scheduler.enable = true;
 }
