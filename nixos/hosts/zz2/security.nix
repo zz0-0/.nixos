@@ -23,6 +23,8 @@
   # GNOME Keyring - auto-unlock on login (needed for Evolution email passwords)
   services.gnome.gnome-keyring.enable = true;
 
+  security.pam.services.login.enableGnomeKeyring = true;
+
   # U2F / FIDO2 security key authentication
   security.pam.u2f = {
     enable = true;
