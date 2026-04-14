@@ -6,6 +6,7 @@
     ./hostname.nix
     ./modules/gpu.nix
     ./modules/storage.nix
+    ./kernel-params.nix
 
     # Shared modules
     ../../shared/boot.nix

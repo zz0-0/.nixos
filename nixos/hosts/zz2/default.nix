@@ -7,7 +7,6 @@
     ./modules/gpu.nix
     ./modules/storage.nix
     ./modules/peripherals.nix
-    ./modules/usb-dock.nix
     ./modules/goodix-custom-driver.nix
     ./security.nix
 

@@ -23,9 +23,9 @@
     "i2c-designware-core"
   ];
 
-  # Blacklist btintel_pcie — it hangs for ~2 min probing device 0000:00:14.7
-  # (Intel Bluetooth 8086:E376) with error -62 (hardware timeout), then gets
-  # killed by systemd-udevd. The device doesn't work with this driver anyway.
+  # Blacklist btintel_pcie — driver kernel-crashes (oops) when probing
+  # device 0000:00:14.7 (Intel Bluetooth 8086:E376). Hardware is broken
+  # on Linux — no adapter ever appears even when module is loaded.
   boot.blacklistedKernelModules = [ "btintel_pcie" ];
 
   boot.extraModprobeConfig = ''
