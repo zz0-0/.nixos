@@ -7,7 +7,6 @@
 
 {
   networking = {
-    hostName = "zz2";
     networkmanager = {
       enable = true;
       wifi = {
@@ -24,12 +23,10 @@
         }
       ];
       allowedUDPPortRanges = allowedTCPPortRanges;
-
     };
   };
 
-  # Note: You may need to adjust the wpa_supplicant OpenSSL config
-  # based on your network setup on zz2
+  # OpenSSL legacy support for wpa_supplicant
   systemd.services.wpa_supplicant.environment.OPENSSL_CONF = pkgs.writeText "openssl.cnf" ''
     openssl_conf = openssl_init
     [openssl_init]

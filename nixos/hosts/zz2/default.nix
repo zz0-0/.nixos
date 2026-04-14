@@ -1,23 +1,36 @@
 {
   imports = [
     ./hardware-configuration.nix
+
+    # Host-specific overrides
+    ./hostname.nix
+    ./modules/gpu.nix
+    ./modules/storage.nix
+    ./modules/peripherals.nix
+    ./modules/usb-dock.nix
+    ./modules/goodix-custom-driver.nix
+    ./security.nix
+
+    # Shared modules
     ../../shared/boot.nix
+    ../../shared/bluetooth.nix
+    ../../shared/desktop.nix
     ../../shared/dns.nix
     ../../shared/fonts.nix
-    ../../shared/hardware.nix
-    ./modules/hardware/bluetooth.nix
-    ./modules/hardware/goodix-custom-driver.nix
-    ./modules/hardware/gpu.nix
-    ./modules/hardware/peripherals.nix
+    ../../shared/firmware.nix
     ../../shared/i18n.nix
-    ./modules/network.nix
-    ./modules/shutdown-fix.nix
+    ../../shared/network.nix
     ../../shared/nix.nix
+    ../../shared/power.nix
     ../../shared/programs/steam.nix
-    ./security.nix
-    ../../shared/services.nix
-    ./modules/storage.nix
+    ../../shared/security.nix
+    ../../shared/shutdown.nix
     ../../shared/users.nix
+
+    # Shared display/audio modules
+    ../../shared/display/x11.nix
+    ../../shared/display/dms.nix
+    ../../shared/audio/pipewire.nix
   ];
 
   system.stateVersion = "26.05";

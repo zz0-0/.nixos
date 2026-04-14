@@ -3,7 +3,7 @@
 {
   # Fix shutdown hang: systemd waits up to 90s for udev workers to settle
   # (often caused by NVIDIA GPU, USB dock, or btintel_pcie not releasing cleanly).
-  # Reduce the timeout and ensure devices are properly powered down.
+  # Reduce the timeout to prevent long waits.
   systemd.settings.Manager = {
     DefaultTimeoutStopSec = "10s";
     DefaultTimeoutStartSec = "10s";
