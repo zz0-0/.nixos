@@ -50,9 +50,6 @@
     wl-mirror
     i2c-tools
     matugen
-
-    # AI
-    opencode
   ];
 
   # Environment variables for NVIDIA GPU in gaming
