@@ -23,11 +23,6 @@
     "i2c-designware-core"
   ];
 
-  # Blacklist btintel_pcie — driver kernel-crashes (oops) when probing
-  # device 0000:00:14.7 (Intel Bluetooth 8086:E376). Hardware is broken
-  # on Linux — no adapter ever appears even when module is loaded.
-  boot.blacklistedKernelModules = [ "btintel_pcie" ];
-
   boot.extraModprobeConfig = ''
     options iwlwifi power_save=1
   '';
