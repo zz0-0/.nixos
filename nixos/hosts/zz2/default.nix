@@ -8,6 +8,7 @@
     ./modules/storage.nix
     ./modules/peripherals.nix
     ./modules/goodix-custom-driver.nix
+    ./modules/podman.nix
     ./security.nix
 
     # Shared modules
