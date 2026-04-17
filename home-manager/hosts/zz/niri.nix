@@ -232,8 +232,11 @@ in
                 at-startup = true;
               }
               {
+                app-id = "electron";
                 title = ".*Microsoft Teams.*";
-                at-startup = true;
+              }
+              {
+                title = ".*Microsoft Teams.*";
               }
             ];
             open-on-workspace = "mail";
