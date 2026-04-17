@@ -200,7 +200,15 @@ in
                 at-startup = true;
               }
               {
+                app-id = "^teamsforlinux$";
+                at-startup = true;
+              }
+              {
                 app-id = "^Microsoft Teams$";
+                at-startup = true;
+              }
+              {
+                title = ".*Microsoft Teams.*";
                 at-startup = true;
               }
             ];
