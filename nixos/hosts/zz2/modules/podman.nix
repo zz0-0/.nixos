@@ -10,27 +10,22 @@
   virtualisation.podman = {
     enable = true;
 
-    # Use NVIDIA container runtime
+    # Docker compatibility - creates /var/run/docker.sock
     dockerCompat = true;
-
-    # Required for GPU passthrough in containers
-    defaultRuntime = "nvidia";
-    runtime = pkgs.nvidia-container-runtime;
   };
 
-  # NVIDIA Container Toolkit configuration for podman
-  environment.etc."nvidia-container-toolkit/config.toml".text = lib.generators.toTOML { } {
-    nvidia-container-cli = {
-      no-cgroups = true;
-      load-kernels = true;
-    };
-    nvidia-container-runtime = {
-      runtime = "nvidia";
-      runtimeArgs = [ "--config=/etc/nvidia-container-runtime/config.toml" ];
-    };
-  };
+  # NVIDIA Container Toolkit configuration
+  environment.etc."nvidia-container-toolkit/config.toml".text = ''
+    [nvidia-container-cli]
+    no-cgroups = true
+    load-kernels = true
 
-  # Ensure NVIDIA libraries are accessible to containers
+    [nvidia-container-runtime]
+    runtime = "nvidia"
+    runtimeArgs = ["--config=/etc/nvidia-container-runtime/config.toml"]
+  '';
+
+  # Environment variables for GPU access in containers
   environment.sessionVariables = {
     NVIDIA_VISIBLE_DEVICES = "all";
     NVIDIA_DRIVER_CAPABILITIES = "all";
