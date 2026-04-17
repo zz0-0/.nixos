@@ -50,6 +50,9 @@
     wl-mirror
     i2c-tools
     matugen
+
+    # Vulkan & GPU tools
+    vulkan-tools
   ];
 
   # Environment variables for NVIDIA GPU in gaming
