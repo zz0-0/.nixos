@@ -1,29 +1,20 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ ... }:
 
 {
-  # Podman with NVIDIA runtime support
+  # Podman with NVIDIA GPU support
   virtualisation.podman = {
     enable = true;
-
-    # Docker compatibility - creates /var/run/docker.sock
     dockerCompat = true;
   };
 
-  # NVIDIA Container Toolkit configuration
-  environment.etc."nvidia-container-toolkit/config.toml".text = ''
-    [nvidia-container-cli]
-    no-cgroups = true
-    load-kernels = true
+  # Enable NVIDIA container toolkit support
+  hardware.nvidia-container-toolkit.enable = true;
 
-    [nvidia-container-runtime]
-    runtime = "nvidia"
-    runtimeArgs = ["--config=/etc/nvidia-container-runtime/config.toml"]
-  '';
+  # CDI directories
+  systemd.tmpfiles.rules = [
+    "d /etc/cdi 0755 root root -"
+    "d /var/run/cdi 0755 root root -"
+  ];
 
   # Environment variables for GPU access in containers
   environment.sessionVariables = {
