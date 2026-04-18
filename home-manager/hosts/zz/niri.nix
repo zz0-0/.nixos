@@ -220,23 +220,12 @@ in
           {
             matches = [
               {
-                app-id = "^teams-for-linux$";
                 at-startup = true;
+                title = ".*Teams.*";
               }
               {
-                app-id = "^teamsforlinux$";
                 at-startup = true;
-              }
-              {
-                app-id = "^Microsoft Teams$";
-                at-startup = true;
-              }
-              {
                 app-id = "electron";
-                title = ".*Microsoft Teams.*";
-              }
-              {
-                title = ".*Microsoft Teams.*";
               }
             ];
             open-on-workspace = "mail";
