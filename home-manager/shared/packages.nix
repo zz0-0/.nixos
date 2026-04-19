@@ -51,6 +51,9 @@
     i2c-tools
     matugen
 
+    # AI
+    opencode
+
     # Vulkan & GPU tools
     vulkan-tools
   ];
