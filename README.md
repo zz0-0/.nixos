@@ -78,6 +78,8 @@ sudo nixos-rebuild switch --flake .#zz
 **For zz2 (new laptop):**
 ```bash
 sudo nixos-rebuild switch --flake .#zz2
+
+sudo NIX_SKIP_SANDBOX=1 nixos-rebuild switch --flake .#zz2
 ```
 
 ### Building Home Manager configurations

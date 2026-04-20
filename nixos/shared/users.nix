@@ -15,7 +15,6 @@
         "wheel"
         "audio"
         "video"
-        "podman"
       ];
       subUidRanges = [
         {

@@ -8,7 +8,6 @@
     ./modules/storage.nix
     ./modules/peripherals.nix
     ./modules/goodix-custom-driver.nix
-    ./modules/podman.nix
     ./security.nix
 
     # Shared modules
@@ -24,7 +23,7 @@
     ../../shared/power.nix
     ../../shared/programs/steam.nix
     ../../shared/security.nix
-    ../../shared/shutdown.nix
+    # ../../shared/shutdown.nix
     ../../shared/users.nix
 
     # Shared display/audio modules

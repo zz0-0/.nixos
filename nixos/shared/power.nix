@@ -1,19 +1,15 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
-  services.auto-cpufreq = {
-    enable = true;
-    settings = {
-      charger = {
-        governor = "performance";
-        turbo = "auto";
-      };
-      battery = {
-        governor = "powersave";
-        turbo = "never";
-      };
-    };
-  };
-
   services.upower.enable = true;
+
+  services.tlp = {
+    enable = true;
+    pd.enable = true;
+  };
 }
