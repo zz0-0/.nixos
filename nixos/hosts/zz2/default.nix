@@ -23,7 +23,7 @@
     ../../shared/power.nix
     ../../shared/programs/steam.nix
     ../../shared/security.nix
-    # ../../shared/shutdown.nix
+    ../../shared/shutdown.nix
     ../../shared/users.nix
 
     # Shared display/audio modules
