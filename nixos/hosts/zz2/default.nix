@@ -9,6 +9,7 @@
     ./modules/peripherals.nix
     ./modules/goodix-custom-driver.nix
     ./security.nix
+    ./kernel-params.nix
 
     # Shared modules
     ../../shared/boot.nix
