@@ -30,13 +30,24 @@
     LABEL="udev_end"
   '';
 
-  # HP Thunderbolt Dock G2 authorization service
+  # HP Thunderbolt Dock G2 authorization at boot and resume
   systemd.services.hp-thunderbolt-dock = {
     description = "Authorize HP Thunderbolt Dock G2";
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.bash}/bin/bash -c 'echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true'";
+      Type = "simple";
+      # Wait for thunderbolt bus to settle, authorize dock, stay running
+      ExecStart = "${pkgs.bash}/bin/bash -c 'echo \"hp-dock: Starting, waiting 5s...\" > /dev/kmsg; sleep 5; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; echo \"hp-dock: Authorized, reading: $(cat /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || echo \"fail\")\" > /dev/kmsg; sleep infinity'";
+      # Re-authorize after resume with longer delay
+      ExecStopPost = "${pkgs.bash}/bin/bash -c 'echo \"hp-dock: Stopping, waiting 3s...\" > /dev/kmsg; sleep 3; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; echo \"hp-dock: Re-authorized\" > /dev/kmsg'";
+    };
+  };
+
+  # Re-authorize HP Thunderbolt Dock G2 after resume from suspend
+  systemd.services.systemd-suspend = {
+    serviceConfig = {
+      # Longer delay to allow Thunderbolt bus to fully re-settle after resume
+      ExecStartPost = "${pkgs.bash}/bin/bash -c 'echo \"suspend: post-resume, waiting 5s...\" > /dev/kmsg; sleep 5; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; echo \"suspend: Re-authorized\" > /dev/kmsg'";
     };
   };
 }

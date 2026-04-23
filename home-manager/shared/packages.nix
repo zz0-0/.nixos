@@ -37,7 +37,6 @@
     # Image, Video & Audio Applications
     snapshot
     bluez
-    inkscape
 
     # Media & Document Applications
     celluloid

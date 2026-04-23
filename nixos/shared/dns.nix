@@ -25,7 +25,9 @@
           "149.112.112.112"
         ];
         upstream_dns = [
-          "https://dns.quad9.net/dns-query"
+          "https://dns.adguard-dns.com/dns-query"
+          "94.140.14.14"
+          "94.140.15.15"
         ];
       };
     };
