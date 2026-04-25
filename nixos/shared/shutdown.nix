@@ -28,6 +28,9 @@
     # Mark all USB devices as not ready during shutdown to prevent udev hang
     ACTION=="remove", SUBSYSTEM=="usb", TAG+="systemd", ENV{SYSTEMD_READY}="0"
     LABEL="udev_end"
+
+    # Keep all USB devices powered (disable autosuspend)
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{power/control}="on"
   '';
 
   # HP Thunderbolt Dock G2 authorization at boot and resume
@@ -43,11 +46,11 @@
     };
   };
 
-  # Re-authorize HP Thunderbolt Dock G2 after resume from suspend
+  # Re-authorize HP Thunderbolt Dock G2 and power USB devices after resume from suspend
   systemd.services.systemd-suspend = {
     serviceConfig = {
       # Longer delay to allow Thunderbolt bus to fully re-settle after resume
-      ExecStartPost = "${pkgs.bash}/bin/bash -c 'echo \"suspend: post-resume, waiting 5s...\" > /dev/kmsg; sleep 5; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; echo \"suspend: Re-authorized\" > /dev/kmsg'";
+      ExecStartPost = "${pkgs.bash}/bin/bash -c 'echo \"suspend: post-resume, waiting 5s...\" > /dev/kmsg; sleep 5; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; for d in /sys/bus/usb/devices/3-4 /sys/bus/usb/devices/3-6; do echo on > $d/power/control 2>/dev/null || true; done; echo \"suspend: Re-authorized and USB powered\" > /dev/kmsg'";
     };
   };
 }
