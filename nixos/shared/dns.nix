@@ -8,7 +8,10 @@
 {
   services.resolved.enable = false;
 
-  networking.nameservers = [ "127.0.0.1" ];
+  networking.nameservers = [
+    "127.0.0.1"
+    "8.8.8.8"
+  ];
 
   services.adguardhome = {
     enable = true;
