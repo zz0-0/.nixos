@@ -35,4 +35,11 @@
     powerManagement.enable = true;
     powerManagement.finegrained = true;
   };
+
+  # Fix screen capture/mirror dark screen on NVIDIA PRIME laptops
+  # The wlr screencast portal needs WLR_RENDERER=wlr to capture properly
+  # This forces the compositor to render via Intel so scanout works
+  environment.sessionVariables = {
+    WLR_RENDERER = "wlr";
+  };
 }

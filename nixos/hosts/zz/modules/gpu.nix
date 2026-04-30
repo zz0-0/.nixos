@@ -21,7 +21,13 @@
       intelBusId = "PCI:0:2:0";
       nvidiaBusId = "PCI:1:0:0";
     };
-    powerManagement.enable = false;
-    powerManagement.finegrained = false;
+    powerManagement.enable = true;
+    powerManagement.finegrained = true;
+  };
+
+  # Fix screen capture/mirror dark screen on NVIDIA PRIME laptops
+  # Forces compositor to use Intel GPU for proper scanout
+  environment.sessionVariables = {
+    WLR_RENDERER = "wlr";
   };
 }
