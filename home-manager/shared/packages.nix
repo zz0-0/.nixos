@@ -37,6 +37,7 @@
     # Image, Video & Audio Applications
     snapshot
     bluez
+    drawio
 
     # Media & Document Applications
     celluloid
@@ -47,7 +48,6 @@
     cliphist
     dsearch
     wl-clipboard
-    wl-mirror
     i2c-tools
     matugen
 

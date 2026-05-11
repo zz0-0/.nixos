@@ -37,9 +37,14 @@
   };
 
   # Fix screen capture/mirror dark screen on NVIDIA PRIME laptops
-  # The wlr screencast portal needs WLR_RENDERER=wlr to capture properly
-  # This forces the compositor to render via Intel so scanout works
-  environment.sessionVariables = {
-    WLR_RENDERER = "wlr";
-  };
+  # wl-mirror needs to use Intel GPU (same as compositor) to capture properly.
+  # Replace wl-mirror with a wrapper that forces Intel GPU
+  environment.systemPackages = [
+    (pkgs.writeScriptBin "wl-mirror" ''
+      #!${pkgs.runtimeShell}
+      export NVIDIA_VISIBLE_DEVICES=void
+      export __NV_PRIME_RENDER_OFFLOAD=0
+      exec ${pkgs.wl-mirror}/bin/wl-mirror "$@"
+    '')
+  ];
 }

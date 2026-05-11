@@ -16,6 +16,8 @@
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "nvidia_drm.modeset=1"
+      "intel_iommu=on"
+      "iommu=pt"
     ];
   };
 }

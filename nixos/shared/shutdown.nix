@@ -6,15 +6,16 @@
 }:
 
 {
-  # Fix shutdown hang: systemd waits up to 90s for udev workers to settle
-  # (often caused by NVIDIA GPU, USB dock, or btintel_pcie not releasing cleanly).
-  # Reduce the timeout to prevent long waits.
+  # AGGRESSIVE SHUTDOWN: short timeouts, kill stuck services fast
   systemd.settings.Manager = {
-    DefaultTimeoutStopSec = "10s";
-    DefaultTimeoutStartSec = "10s";
+    DefaultTimeoutStopSec = "5s"; # was 10s - only wait 5s before SIGKILL
+    DefaultTimeoutStartSec = "5s";
+    # Fail fast - don't retry failing services
+    StartLimitIntervalSec = "1s";
+    StartLimitBurst = "2";
   };
 
-  # udev rules: don't wait for USB/NVIDIA/Bluetooth devices during shutdown
+  # udev rules: keep USB devices powered and prevent autosuspend
   services.udev.extraRules = ''
     # Allow USB devices to disconnect during shutdown
     ACTION=="remove", SUBSYSTEM=="usb", GOTO="udev_end"
@@ -38,19 +39,18 @@
     description = "Authorize HP Thunderbolt Dock G2";
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
-      Type = "simple";
-      # Wait for thunderbolt bus to settle, authorize dock, stay running
-      ExecStart = "${pkgs.bash}/bin/bash -c 'echo \"hp-dock: Starting, waiting 5s...\" > /dev/kmsg; sleep 5; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; echo \"hp-dock: Authorized, reading: $(cat /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || echo \"fail\")\" > /dev/kmsg; sleep infinity'";
-      # Re-authorize after resume with longer delay
-      ExecStopPost = "${pkgs.bash}/bin/bash -c 'echo \"hp-dock: Stopping, waiting 3s...\" > /dev/kmsg; sleep 3; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; echo \"hp-dock: Re-authorized\" > /dev/kmsg'";
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.bash}/bin/bash -c 'echo hp-dock > /dev/kmsg; sleep 2; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; echo done > /dev/kmsg'";
+      # Re-authorize on service stop (which happens on suspend)
+      ExecStop = "${pkgs.bash}/bin/bash -c 'echo hp-dock-stop > /dev/kmsg; sleep 1; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true'";
     };
   };
 
   # Re-authorize HP Thunderbolt Dock G2 and power USB devices after resume from suspend
   systemd.services.systemd-suspend = {
     serviceConfig = {
-      # Longer delay to allow Thunderbolt bus to fully re-settle after resume
-      ExecStartPost = "${pkgs.bash}/bin/bash -c 'echo \"suspend: post-resume, waiting 5s...\" > /dev/kmsg; sleep 5; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; for d in /sys/bus/usb/devices/3-4 /sys/bus/usb/devices/3-6; do echo on > $d/power/control 2>/dev/null || true; done; echo \"suspend: Re-authorized and USB powered\" > /dev/kmsg'";
+      ExecStopPost = "${pkgs.bash}/bin/bash -c 'echo resume > /dev/kmsg; sleep 2; echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized 2>/dev/null || true; for d in /sys/bus/usb/devices/3-4 /sys/bus/usb/devices/3-6; do echo on > $d/power/control 2>/dev/null || true; done; echo done > /dev/kmsg'";
     };
   };
 }
