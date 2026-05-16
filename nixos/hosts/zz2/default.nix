@@ -30,7 +30,7 @@
     # Shared display/audio modules
     ../../shared/display/x11.nix
     ../../shared/display/dms.nix
-    ../../shared/audio/pipewire.nix
+    # ../../shared/audio/pipewire.nix
   ];
 
   system.stateVersion = "26.05";

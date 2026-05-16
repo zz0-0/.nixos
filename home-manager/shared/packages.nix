@@ -53,6 +53,7 @@
 
     # AI
     opencode
+    rtk
 
     # Vulkan & GPU tools
     vulkan-tools
