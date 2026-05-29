@@ -35,6 +35,11 @@ let
       sed -i 's/del_timer_sync(&td->release_timer)/timer_delete_sync(\&td->release_timer)/g' hid-multitouch.c
       sed -i 's/struct mt_device \*td = from_timer(td, t, release_timer)/struct mt_device *td = container_of(t, struct mt_device, release_timer)/g' hid-multitouch.c
 
+      # Fix hid_report_raw_event API change in kernel 7.0+ (added bufsize parameter)
+      # Old: hid_report_raw_event(hdev, type, buf, size, interrupt)
+      # New: hid_report_raw_event(hdev, type, buf, bufsize, size, interrupt)
+      sed -i 's/hid_report_raw_event(hdev, HID_FEATURE_REPORT, buf,/hid_report_raw_event(hdev, HID_FEATURE_REPORT, buf, size,/g' hid-multitouch.c
+
       # Add device ID 0x01E7
       sed -i '/0x01E8/a\\t    { HID_I2C_DEVICE(I2C_VENDOR_ID_GOODIX, 0x01E7) },' goodix-gt7868q.c
 

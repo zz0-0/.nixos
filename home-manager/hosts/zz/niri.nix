@@ -1,160 +1,17 @@
-{ config, pkgs, ... }:
+{ config, ... }:
 
-let
-  # Script to configure niri outputs based on connected monitors
-  configureNiriOutputsScript = pkgs.writeShellScriptBin "configure-niri-outputs" ''
-    set -euo pipefail
-
-    # Wait a bit for niri to be ready
-    echo "Waiting for niri to be ready..."
-    sleep 3
-
-    # Get list of connected outputs from niri
-    connected_outputs=$("${pkgs.niri}/bin/niri" msg outputs 2>/dev/null || true)
-
-    # Parse outputs to identify monitors by serial number
-    edp1_found=false
-    monitor_11601000458_connector=""
-    monitor_11709001774_connector=""
-
-    echo "Detecting monitors..."
-
-    while IFS= read -r line; do
-      # Extract connector name (text in parentheses)
-      connector=$(echo "$line" | sed -n 's/.*(\([^)]*\)).*/\1/p')
-      if [[ -n "$connector" ]]; then
-
-        # Check for eDP-1 (laptop display)
-        if [[ "$connector" == "eDP-1" ]]; then
-          edp1_found=true
-          echo "Found laptop display: $connector"
-          continue
-        fi
-
-        # Check if this line contains monitor serial numbers
-        if [[ "$line" == *"AU11601000458"* ]]; then
-          monitor_11601000458_connector="$connector"
-          echo "Found AU11601000458 on connector: $connector"
-        elif [[ "$line" == *"AU11709001774"* ]]; then
-          monitor_11709001774_connector="$connector"
-          echo "Found AU11709001774 on connector: $connector"
-        elif [[ "$connector" == "DP-2" || "$connector" == "DP-3" ]]; then
-          # These might be the Philips monitors but we couldn't identify by serial
-          echo "Found external monitor on connector: $connector (serial unknown)"
-        fi
-      fi
-    done <<< "$connected_outputs"
-
-    # Position monitors contiguously
-    x_position=0
-
-    # Get the width of eDP-1 for positioning calculations
-    edp1_width=1920  # Default
-
-    # Always position AU11601000458 first (leftmost)
-    if [[ -n "$monitor_11601000458_connector" ]]; then
-      echo "Positioning AU11601000458 ($monitor_11601000458_connector) at $x_position,0"
-      "${pkgs.niri}/bin/niri" msg output "$monitor_11601000458_connector" position set $x_position 0 || true
-      x_position=$((x_position + 1920))
-    fi
-
-    # Always position AU11709001774 second (middle)
-    if [[ -n "$monitor_11709001774_connector" ]]; then
-      echo "Positioning AU11709001774 ($monitor_11709001774_connector) at $x_position,0"
-      "${pkgs.niri}/bin/niri" msg output "$monitor_11709001774_connector" position set $x_position 0 || true
-      x_position=$((x_position + 1920))
-    fi
-
-    # Position eDP-1 last (rightmost)
-    if [[ "$edp1_found" == true ]]; then
-      echo "Positioning eDP-1 (laptop display) at $x_position,0"
-      "${pkgs.niri}/bin/niri" msg output "eDP-1" position set $x_position 0 || true
-    else
-      echo "Warning: eDP-1 not found, using default position 0,0"
-      "${pkgs.niri}/bin/niri" msg output "eDP-1" position set 0 0 || true
-    fi
-
-    # Wait for configuration to take effect
-    echo "Waiting for configuration to settle..."
-    sleep 2
-
-    # Verify configuration - ensure monitors are positioned contiguously
-    echo "Verifying monitor positions..."
-    "${pkgs.niri}/bin/niri" msg outputs 2>/dev/null | grep -A1 "Output " || true
-
-    # Additional verification: check for gaps
-    echo "Checking for gaps in monitor layout..."
-    positions=$("${pkgs.niri}/bin/niri" msg outputs 2>/dev/null | grep "Logical position:" | sed 's/.*Logical position: \([0-9]\+\),.*/\1/' | sort -n || true)
-
-    if [[ -n "$positions" ]]; then
-      prev_pos=""
-      for pos in $positions; do
-        if [[ -n "$prev_pos" ]]; then
-          gap=$((pos - prev_pos))
-          if [[ $gap -gt 1920 ]]; then
-            echo "WARNING: Large gap detected between monitors: $prev_pos to $pos (gap: $gap pixels)"
-            echo "This may cause mouse confinement issues in games!"
-          elif [[ $gap -lt 1920 ]]; then
-            echo "WARNING: Monitors may be overlapping or too close: $prev_pos to $pos (gap: $gap pixels)"
-          fi
-        fi
-        prev_pos=$pos
-      done
-    fi
-
-    echo "Output configuration complete - ensure monitors are contiguous for proper mouse movement"
-
-    # Assign workspaces based on connected monitors
-    echo "Configuring workspace assignments..."
-    if [[ -n "$monitor_11601000458_connector" ]]; then
-        echo "Moving workspace 'mail' to monitor $monitor_11601000458_connector"
-        "${pkgs.niri}/bin/niri" msg action focus-workspace "mail" || true
-        "${pkgs.niri}/bin/niri" msg action move-workspace-to-monitor "$monitor_11601000458_connector" || true
-    else
-        echo "No external monitor found, keeping workspace 'mail' on eDP-1"
-        "${pkgs.niri}/bin/niri" msg action focus-workspace "mail" || true
-        "${pkgs.niri}/bin/niri" msg action move-workspace-to-monitor "eDP-1" || true
-    fi
-
-    # Refocus dev workspace
-    echo "Refocusing workspace 'dev'"
-    "${pkgs.niri}/bin/niri" msg action focus-workspace "dev" || true
-
-    echo "Workspace configuration complete"
-  '';
-in
 {
   config = {
     programs.niri = {
       enable = true;
       settings = {
-        # zz-specific outputs
-        outputs = {
-          # eDP-1: 1920x1080 @ 144Hz
-          "eDP-1" = {
-            mode = {
-              width = 1920;
-              height = 1080;
-              refresh = 143.999;
-            };
-            position = {
-              x = 0;
-              y = 0;
-            };
-          };
-        };
-
         screenshot-path = "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png";
         hotkey-overlay.skip-at-startup = true;
         prefer-no-csd = true;
 
         workspaces = {
-          "dev" = {
-            open-on-output = "eDP-1";
-          };
-          "mail" = {
-            open-on-output = "eDP-1";
-          };
+          "dev" = {};
+          "mail" = {};
         };
 
         environment = {
@@ -196,12 +53,7 @@ in
         layout.focus-ring.inactive.color = "#505050";
         layout.border.enable = false;
 
-        spawn-at-startup = pkgs.lib.mkForce [
-          {
-            command = [
-              "${configureNiriOutputsScript}/bin/configure-niri-outputs"
-            ];
-          }
+        spawn-at-startup = [
           {
             command = [
               "wl-clip-persist"
@@ -225,7 +77,7 @@ in
               }
               {
                 at-startup = true;
-                app-id = "electron";
+                app-id = "^teams-for-linux$";
               }
             ];
             open-on-workspace = "mail";
@@ -600,7 +452,5 @@ in
         };
       };
     };
-
-    home.packages = [ configureNiriOutputsScript ];
   };
 }

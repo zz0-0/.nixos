@@ -6,7 +6,7 @@
 
     niri = {
       enableKeybinds = false;
-      enableSpawn = true;
+      enableSpawn = false;  # systemd handles bar spawning (enableSpawn would duplicate)
     };
 
     systemd = {
