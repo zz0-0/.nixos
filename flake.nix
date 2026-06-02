@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     home-manager = {
-      url = "github:nix-community/home-manager/master";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -21,6 +21,7 @@
 
     devshell = {
       url = "github:zz0-0/.devshell";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
