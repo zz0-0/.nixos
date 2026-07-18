@@ -11,13 +11,6 @@
     });
   '';
 
-  # GNOME Keyring - auto-unlock on login
-  services.gnome.gnome-keyring.enable = true;
-  security.pam.services.login.enableGnomeKeyring = true;
-  security.pam.services.systemd-user.enableGnomeKeyring = true;
-  security.pam.services.dms-greeter.enableGnomeKeyring = true;
-  security.pam.services.sudo.enableGnomeKeyring = true;
-
-  # greetd PAM: enable keyring (order issue remains, but greetd works)
-  security.pam.services.greetd.enableGnomeKeyring = true;
+  # GNOME Keyring - disabled to eliminate password prompts
+  services.gnome.gnome-keyring.enable = false;
 }

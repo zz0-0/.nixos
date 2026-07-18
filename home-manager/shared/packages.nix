@@ -12,8 +12,8 @@
     # Browsers & Communication
     brave
     teams-for-linux
-    evolution
-    evolution-ews
+    # evolution
+    # evolution-ews
     wechat
 
     # File Managers & Utilities

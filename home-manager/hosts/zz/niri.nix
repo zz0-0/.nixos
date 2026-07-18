@@ -83,20 +83,20 @@
             open-on-workspace = "mail";
             open-focused = false;
           }
-          {
-            matches = [
-              {
-                at-startup = true;
-                app-id = "^evolution$";
-              }
-              {
-                at-startup = true;
-                app-id = "^org\\.gnome\\.Evolution$";
-              }
-            ];
-            open-on-workspace = "mail";
-            open-focused = false;
-          }
+          # {
+          #   matches = [
+          #     {
+          #       at-startup = true;
+          #       app-id = "^evolution$";
+          #     }
+          #     {
+          #       at-startup = true;
+          #       app-id = "^org\\.gnome\\.Evolution$";
+          #     }
+          #   ];
+          #   open-on-workspace = "mail";
+          #   open-focused = false;
+          # }
         ];
 
         layer-rules = [

@@ -31,6 +31,12 @@
   boot.kernelParams = [
     # Some Goodix touchpads need I2C controller reset at boot
     "i8042.nopnp"
+    # Cap udev's per-event worker timeout at 10s (default 180s). The
+    # btintel_pcie Bluetooth controller (8086:E376) intermittently wedges its
+    # driver in uninterruptible (D) state; a udev worker that touches it at
+    # shutdown otherwise blocks for 180s before being killed -> long shutdown
+    # stall. This bounds that stall to ~10s.
+    "udev.event_timeout=10"
   ];
 
   # If touchpad or WiFi still doesn't work, run these and share output:

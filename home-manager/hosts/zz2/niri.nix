@@ -1,7 +1,28 @@
-{ config, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   config = {
+    systemd.user.services.niri = {
+      Unit = {
+        Description = "A scrollable-tiling Wayland compositor";
+        BindsTo = [ "graphical-session.target" ];
+        Before = [ "graphical-session.target" ];
+        Wants = [ "graphical-session-pre.target" "xdg-desktop-autostart.target" ];
+        After = [ "graphical-session-pre.target" ];
+        PartOf = [ "graphical-session.target" ];
+      };
+      Service = {
+        Slice = "session.slice";
+        Type = "notify";
+        ExecStart = "${config.programs.niri.package}/bin/niri --session";
+        # Multi-GPU: do not restrict glvnd/Vulkan to Intel-only.
+        # Without these overrides, niri auto-discovers both GPUs and creates
+        # separate renderers per GPU — Intel for eDP, NVIDIA for HDMI.
+        # NVIDIA stays in D3cold when no external monitor is connected.
+        Environment = [];
+      };
+    };
+
     programs.niri = {
       enable = true;
 
@@ -84,20 +105,20 @@
             open-on-workspace = "mail";
             open-focused = false;
           }
-          {
-            matches = [
-              {
-                at-startup = true;
-                app-id = "^evolution$";
-              }
-              {
-                at-startup = true;
-                app-id = "^org\\.gnome\\.Evolution$";
-              }
-            ];
-            open-on-workspace = "mail";
-            open-focused = false;
-          }
+          # {
+          #   matches = [
+          #     {
+          #       at-startup = true;
+          #       app-id = "^evolution$";
+          #     }
+          #     {
+          #       at-startup = true;
+          #       app-id = "^org\\.gnome\\.Evolution$";
+          #     }
+          #   ];
+          #   open-on-workspace = "mail";
+          #   open-focused = false;
+          # }
         ];
 
         layer-rules = [

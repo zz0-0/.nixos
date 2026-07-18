@@ -16,12 +16,24 @@
   # AdGuardHome handles upstream fallback internally — a second nameserver here
   # would let glibc bypass ad-blocking if 127.0.0.1 is momentarily slow.
   #
-  # timeout:1  → if no reply in 1 s, retry (default is 5 s — too long for localhost)
-  # attempts:2 → retry once before giving up
+  # timeout:3  → if no reply in 3 s, retry (was 1 s — too aggressive for builds)
+  # attempts:3 → retry twice before giving up
   # edns0      → allow larger DNS packets (needed for DNSSEC, large filter lists)
   environment.etc."resolv.conf".text = ''
     nameserver 127.0.0.1
-    options edns0 timeout:1 attempts:2
+    options edns0 timeout:3 attempts:3
+  '';
+
+  # Hardcoded fallback IPs for critical build dependencies.
+  # If AdGuard/DNS is temporarily unreachable, /etc/hosts keeps nix builds working.
+  # These are CDN IPs (Fastly, GitHub Pages) — they rarely change.
+  networking.extraHosts = ''
+    151.101.2.137 static.crates.io
+    151.101.130.137 static.crates.io
+    65.8.140.2 crates.io
+    4.237.22.38 github.com
+    185.199.111.133 raw.githubusercontent.com
+    185.199.109.133 raw.githubusercontent.com
   '';
 
   services.adguardhome = {
@@ -93,7 +105,7 @@
 
         # ── Security & rate-limiting ───────────────────────────────────
         enable_dnssec = true;
-        ratelimit = 20;            # Max 20 queries / second per client
+        ratelimit = 0;             # Disabled — localhost builds need high QPS
       };
 
       filtering = {
