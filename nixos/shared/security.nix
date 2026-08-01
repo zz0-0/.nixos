@@ -10,7 +10,4 @@
       }
     });
   '';
-
-  # GNOME Keyring - disabled to eliminate password prompts
-  services.gnome.gnome-keyring.enable = false;
 }

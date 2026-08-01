@@ -27,7 +27,6 @@ in
     ../../shared/programs/editor.nix
     ../../shared/programs/git.nix
     ./niri.nix
-    ../../shared/services.nix
     ../../shared/shell.nix
     ../../shared/theme.nix
     {

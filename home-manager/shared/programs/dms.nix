@@ -20,5 +20,4 @@
     enableAudioWavelength = true;
     enableCalendarEvents = true;
   };
-
 }

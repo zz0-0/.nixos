@@ -84,6 +84,13 @@
             });
           };
         }
+        ({ pkgs, ... }: {
+          # xdg-desktop-portal-gnome is required for screencasting on niri
+          xdg.portal = {
+            enable = true;
+            extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
+          };
+        })
       ];
     in
     {

@@ -37,16 +37,6 @@
   # NVIDIA handles its own power management via the nvidia driver
   # (NVreg_DynamicPowerManagement).
   services.udev.extraRules = ''
-    # PCI runtime PM: auto-suspend idle devices (except NVIDIA dGPU)
-    # Skip the btintel_pcie Bluetooth controller (8086:E376): its driver
-    # wedges at probe (WARN + D-state, probe fails -ETIME), so writing
-    # power/control to it hangs the udev worker and stalls shutdown.
-    ENV{PCI_ID}=="8086:E376", GOTO="pci_pm_end"
-    SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", GOTO="pci_pm_end"
-    SUBSYSTEM=="pci", ATTR{power/control}="auto"
-    LABEL="pci_pm_end"
-  '' + ''
-
     # SATA ALPM: aggressive link power management for SATA drives
     # med_power_with_dipm saves ~1-1.5W (matches Windows IRST behavior)
     ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}="med_power_with_dipm"

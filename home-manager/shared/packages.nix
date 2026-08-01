@@ -35,9 +35,7 @@
     remmina
 
     # Image, Video & Audio Applications
-    snapshot
     bluez
-    drawio
 
     # Media & Document Applications
     celluloid
