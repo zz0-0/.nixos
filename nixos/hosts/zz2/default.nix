@@ -5,11 +5,9 @@
     # Host-specific overrides
     ./hostname.nix
     ./modules/gpu.nix
-    ./modules/storage.nix
     ./modules/peripherals.nix
     ./modules/goodix-custom-driver.nix
     ./security.nix
-    ./kernel-params.nix
 
     # Shared modules
     ../../shared/boot.nix
@@ -22,9 +20,7 @@
     ../../shared/network.nix
     ../../shared/nix.nix
     ../../shared/power.nix
-    ../../shared/programs/steam.nix
     ../../shared/security.nix
-    ../../shared/shutdown.nix
     ../../shared/users.nix
 
     # Shared display/audio modules

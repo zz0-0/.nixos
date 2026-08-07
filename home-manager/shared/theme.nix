@@ -12,12 +12,8 @@
     gtk3.colorScheme = "dark";
     gtk4.colorScheme = "dark";
     theme = {
-      name = "Yaru-dark";
-      package = pkgs.yaru-theme;
-    };
-    gtk4.theme = {
-      name = "Yaru-dark";
-      package = pkgs.yaru-theme;
+      name = "adw-gtk3-dark";
+      package = pkgs.adw-gtk3;
     };
     cursorTheme = {
       name = "phinger-cursors-light";
@@ -33,13 +29,13 @@
   qt = {
     enable = true;
     platformTheme.name = "gtk3";
-    style.name = "Yaru-dark";
+    style.name = "adw-gtk3-dark";
   };
 
   dconf.enable = true;
   dconf.settings = {
     "org/gnome/desktop/interface" = {
-      gtk-theme = "Yaru-dark";
+      gtk-theme = "adw-gtk3-dark";
       color-scheme = "prefer-dark";
       gtk-application-prefer-dark-theme = true;
     };
@@ -47,6 +43,6 @@
 
   home.sessionVariables = {
     GTK_USE_PORTAL = "1";
-    GTK_THEME = "Yaru-dark";
+    GTK_THEME = "adw-gtk3-dark";
   };
 }

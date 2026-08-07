@@ -40,11 +40,40 @@
       system = "x86_64-linux";
       systemVersion = "26.05";
 
-      # Overlay to fix niri build issues (disable failing tests)
-      niriOverlay = final: prev: {
-        niri = inputs.niri.packages.${system}.niri-unstable.overrideAttrs (_: {
-          doCheck = false;
-        });
+      # Restore libdisplay-info 0.2.0 (removed from nixpkgs 2026-08-04).
+      # niri-flake's make-niri asserts version == "0.2.0"; remove once upstream
+      # niri-flake stops pinning it.
+      libdisplayInfoOverlay = final: prev: {
+        libdisplay-info_0_2 = prev.stdenv.mkDerivation {
+          pname = "libdisplay-info";
+          version = "0.2.0";
+          src = prev.fetchFromGitLab {
+            domain = "gitlab.freedesktop.org";
+            owner = "emersion";
+            repo = "libdisplay-info";
+            tag = "0.2.0";
+            hash = "sha256-6xmWBrPHghjok43eIDGeshpUEQTuwWLXNHg7CnBUt3Q=";
+          };
+          strictDeps = true;
+          __structuredAttrs = true;
+          depsBuildBuild = [ prev.pkg-config ];
+          nativeBuildInputs = [
+            prev.meson
+            prev.pkg-config
+            prev.ninja
+            prev.hwdata
+            prev.python3
+          ];
+          postPatch = ''
+            patchShebangs tool/gen-search-table.py
+          '';
+          meta = {
+            description = "EDID and DisplayID library";
+            homepage = "https://gitlab.freedesktop.org/emersion/libdisplay-info";
+            license = prev.lib.licenses.mit;
+            platforms = prev.lib.platforms.linux ++ prev.lib.platforms.freebsd;
+          };
+        };
       };
 
       pkgs = import nixpkgs {
@@ -52,11 +81,22 @@
         config = {
           allowUnfree = true;
         };
-        overlays = [ niriOverlay ];
+        overlays = [ libdisplayInfoOverlay ];
       };
 
+      # niri-unstable with tests disabled (failing tests on some systems with EGL display issues).
+      # Built via the flake's make-package-set so it picks up the libdisplay-info overlay.
+      niriPkg = (inputs.niri.lib.internal.make-package-set pkgs).niri-unstable.overrideAttrs (_: {
+        doCheck = false;
+      });
+
       specialArgs = {
-        inherit username systemVersion system;
+        inherit
+          username
+          systemVersion
+          system
+          niriPkg
+          ;
         niri = inputs.niri;
         dankMaterialShell = inputs.dankMaterialShell;
       };
@@ -79,9 +119,7 @@
           # Required by DMS greeter - use niri-unstable with tests disabled
           programs.niri = {
             enable = true;
-            package = inputs.niri.packages.${system}.niri-unstable.overrideAttrs (_: {
-              doCheck = false;
-            });
+            package = niriPkg;
           };
         }
         ({ pkgs, ... }: {
@@ -92,55 +130,63 @@
           };
         })
       ];
+
+      # Hosts and their module paths. Add a new host by adding one entry here.
+      hosts = {
+        zz = {
+          description = "Original laptop";
+          nixosModules = ./nixos/hosts/zz;
+          homeModules = ./home-manager/hosts/zz/default.nix;
+        };
+        zz2 = {
+          description = "New laptop (Intel i7-358H + NVIDIA RTX 5060)";
+          nixosModules = ./nixos/hosts/zz2;
+          homeModules = ./home-manager/hosts/zz2/default.nix;
+        };
+      };
     in
     {
-      nixosConfigurations = {
-        # Original laptop configuration
-        zz = nixpkgs.lib.nixosSystem {
+      nixosConfigurations = nixpkgs.lib.genAttrs (builtins.attrNames hosts) (
+        name:
+        nixpkgs.lib.nixosSystem {
           inherit specialArgs system;
           pkgs = pkgs;
           modules = [
-            ./nixos/hosts/zz
+            hosts.${name}.nixosModules
           ]
           ++ commonModules
           ++ [
             {
-              home-manager.users.${username} = import ./home-manager/hosts/zz/default.nix;
+              home-manager.users.${username} = import hosts.${name}.homeModules;
             }
           ];
-        };
+        }
+      );
 
-        # New laptop (Intel i7-358H + NVIDIA RTX 5060)
-        zz2 = nixpkgs.lib.nixosSystem {
-          inherit specialArgs system;
-          pkgs = pkgs;
-          modules = [
-            ./nixos/hosts/zz2
-          ]
-          ++ commonModules
-          ++ [
+      homeConfigurations = nixpkgs.lib.genAttrs (builtins.attrNames hosts) (
+        name:
+        home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ hosts.${name}.homeModules ];
+          extraSpecialArgs = specialArgs;
+        }
+      );
+
+      # `nix flake check` builds and validates all hosts
+      checks.x86_64-linux = builtins.listToAttrs (
+        builtins.concatLists (
+          map (name: [
             {
-              home-manager.users.${username} = import ./home-manager/hosts/zz2/default.nix;
+              name = "nixos-${name}";
+              value = self.nixosConfigurations.${name}.config.system.build.toplevel;
             }
-          ];
-        };
-      };
-
-      homeConfigurations = {
-        # Standalone Home Manager for zz
-        zz = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./home-manager/hosts/zz/default.nix ];
-          extraSpecialArgs = specialArgs;
-        };
-
-        # Standalone Home Manager for zz2
-        zz2 = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./home-manager/hosts/zz2/default.nix ];
-          extraSpecialArgs = specialArgs;
-        };
-      };
+            {
+              name = "home-${name}";
+              value = self.homeConfigurations.${name}.activationPackage;
+            }
+          ]) (builtins.attrNames hosts)
+        )
+      );
 
       devShells.x86_64-linux.default = devshell.lib.x86_64-linux.nix {
         extraPackages = [ home-manager.packages.${system}.default ];

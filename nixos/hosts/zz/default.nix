@@ -6,7 +6,6 @@
     ./hostname.nix
     ./modules/gpu.nix
     ./modules/storage.nix
-    ./kernel-params.nix
 
     # Shared modules
     ../../shared/boot.nix
@@ -19,9 +18,7 @@
     ../../shared/network.nix
     ../../shared/nix.nix
     ../../shared/power.nix
-    ../../shared/programs/steam.nix
     ../../shared/security.nix
-    ../../shared/shutdown.nix
     ../../shared/users.nix
 
     # Shared display/audio modules
@@ -30,5 +27,5 @@
     ../../shared/audio/pipewire.nix
   ];
 
-  system.stateVersion = "26.11";
+  system.stateVersion = "26.05";
 }

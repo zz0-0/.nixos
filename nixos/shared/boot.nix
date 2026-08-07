@@ -11,13 +11,10 @@
     loader = {
       systemd-boot.enable = true;
       systemd-boot.configurationLimit = 5;
+      systemd-boot.editor = false;
       efi.canTouchEfiVariables = true;
     };
     kernelPackages = pkgs.linuxPackages_latest;
-    kernelParams = [
-      "nvidia_drm.modeset=1"
-      "intel_iommu=on"
-      "iommu=pt"
-    ];
+    # nvidia-drm.modeset=1 is added automatically by hardware.nvidia.modesetting.enable
   };
 }

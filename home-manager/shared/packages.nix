@@ -3,7 +3,7 @@
 {
   home.packages = with pkgs; [
     # Theme $ Appearance
-    yaru-theme
+    adw-gtk3
     colloid-icon-theme
     phinger-cursors
     libsForQt5.qt5ct
@@ -12,8 +12,6 @@
     # Browsers & Communication
     brave
     teams-for-linux
-    # evolution
-    # evolution-ews
     wechat
 
     # File Managers & Utilities
@@ -22,17 +20,8 @@
     gnome-disk-utility
     evince
 
-    # Download Manager
-    gopeed
-
-    # Gaming
-    heroic
-
     # Ebook
     koodo-reader
-
-    # Remote Desktop
-    remmina
 
     # Image, Video & Audio Applications
     bluez
@@ -42,7 +31,6 @@
     libreoffice-fresh
 
     # Wayland & DMS Utilities
-    xwayland-satellite
     cliphist
     dsearch
     wl-clipboard
@@ -52,16 +40,5 @@
     # AI
     opencode
     rtk
-
-    # Vulkan & GPU tools
-    vulkan-tools
   ];
-
-  # Environment variables for NVIDIA GPU in gaming
-  # These help Heroic and Wine/Proton games detect and use the NVIDIA GPU
-  home.sessionVariables = {
-    # Tell Vulkan/OpenGL to prefer NVIDIA GPU
-    __NV_PRIME_RENDER_OFFLOAD = "1";
-    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-  };
 }

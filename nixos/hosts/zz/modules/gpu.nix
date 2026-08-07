@@ -24,10 +24,4 @@
     powerManagement.enable = true;
     powerManagement.finegrained = true;
   };
-
-  # Fix screen capture/mirror dark screen on NVIDIA PRIME laptops
-  # Forces compositor to use Intel GPU for proper scanout
-  environment.sessionVariables = {
-    WLR_RENDERER = "wlr";
-  };
 }

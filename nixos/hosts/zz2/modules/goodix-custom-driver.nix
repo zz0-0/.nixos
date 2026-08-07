@@ -16,10 +16,12 @@
 # This forces libinput to fall back to BTN_TOUCH-based detection, which works.
 
 let
+  # Pinned to c4c4cca (2025-08-02, current main) — bump deliberately and
+  # update the hash when pulling a newer revision.
   goodix-src = pkgs.fetchFromGitHub {
     owner = "ty2";
     repo = "goodix-gt7868q-linux-driver";
-    rev = "main";
+    rev = "c4c4ccac098697d83a332aa512563133cb1f9199";
     hash = "sha256-n1Xws5uEtFNenZau32cXvYyiUbhKvUlUf3LCcYZoD/Y=";
   };
 

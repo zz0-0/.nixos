@@ -10,8 +10,8 @@
         prefer-no-csd = true;
 
         workspaces = {
-          "dev" = {};
-          "mail" = {};
+          "dev" = { };
+          "mail" = { };
         };
 
         environment = {
@@ -83,20 +83,6 @@
             open-on-workspace = "mail";
             open-focused = false;
           }
-          # {
-          #   matches = [
-          #     {
-          #       at-startup = true;
-          #       app-id = "^evolution$";
-          #     }
-          #     {
-          #       at-startup = true;
-          #       app-id = "^org\\.gnome\\.Evolution$";
-          #     }
-          #   ];
-          #   open-on-workspace = "mail";
-          #   open-focused = false;
-          # }
         ];
 
         layer-rules = [
@@ -105,10 +91,6 @@
             place-within-backdrop = true;
           }
         ];
-
-        debug = {
-          wait-for-frame-completion-before-queueing = [ ];
-        };
 
         binds = {
           # System
