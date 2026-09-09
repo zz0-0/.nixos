@@ -18,6 +18,7 @@
     ../../shared/network.nix
     ../../shared/nix.nix
     ../../shared/power.nix
+    ../../shared/programs/steam.nix
     ../../shared/security.nix
     ../../shared/users.nix
 

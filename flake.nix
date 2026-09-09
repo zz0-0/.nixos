@@ -10,7 +10,7 @@
     };
 
     niri = {
-      url = "github:sodiboo/niri-flake/main";
+      url = "github:bugeats/niri-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -40,52 +40,14 @@
       system = "x86_64-linux";
       systemVersion = "26.05";
 
-      # Restore libdisplay-info 0.2.0 (removed from nixpkgs 2026-08-04).
-      # niri-flake's make-niri asserts version == "0.2.0"; remove once upstream
-      # niri-flake stops pinning it.
-      libdisplayInfoOverlay = final: prev: {
-        libdisplay-info_0_2 = prev.stdenv.mkDerivation {
-          pname = "libdisplay-info";
-          version = "0.2.0";
-          src = prev.fetchFromGitLab {
-            domain = "gitlab.freedesktop.org";
-            owner = "emersion";
-            repo = "libdisplay-info";
-            tag = "0.2.0";
-            hash = "sha256-6xmWBrPHghjok43eIDGeshpUEQTuwWLXNHg7CnBUt3Q=";
-          };
-          strictDeps = true;
-          __structuredAttrs = true;
-          depsBuildBuild = [ prev.pkg-config ];
-          nativeBuildInputs = [
-            prev.meson
-            prev.pkg-config
-            prev.ninja
-            prev.hwdata
-            prev.python3
-          ];
-          postPatch = ''
-            patchShebangs tool/gen-search-table.py
-          '';
-          meta = {
-            description = "EDID and DisplayID library";
-            homepage = "https://gitlab.freedesktop.org/emersion/libdisplay-info";
-            license = prev.lib.licenses.mit;
-            platforms = prev.lib.platforms.linux ++ prev.lib.platforms.freebsd;
-          };
-        };
-      };
-
       pkgs = import nixpkgs {
         inherit system;
         config = {
           allowUnfree = true;
         };
-        overlays = [ libdisplayInfoOverlay ];
       };
 
       # niri-unstable with tests disabled (failing tests on some systems with EGL display issues).
-      # Built via the flake's make-package-set so it picks up the libdisplay-info overlay.
       niriPkg = (inputs.niri.lib.internal.make-package-set pkgs).niri-unstable.overrideAttrs (_: {
         doCheck = false;
       });

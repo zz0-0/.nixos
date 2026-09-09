@@ -22,6 +22,7 @@
     ./programs/dms.nix
     ./programs/editor.nix
     ./programs/git.nix
+    ./programs/teams.nix
     ./shell.nix
     ./theme.nix
     {

@@ -12,4 +12,10 @@
   '';
 
   services.gnome.gnome-keyring.enable = true;
+
+  # Auto-unlock gnome-keyring with login password via PAM.
+  security.pam.services = {
+    login.enableGnomeKeyring = true;
+    greetd.enableGnomeKeyring = true;
+  };
 }

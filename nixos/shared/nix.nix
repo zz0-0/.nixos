@@ -8,7 +8,10 @@
 {
   nix = {
     settings = {
-      experimental-features = "nix-command flakes";
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
       accept-flake-config = true;
       auto-optimise-store = true;
       builders-use-substitutes = true;

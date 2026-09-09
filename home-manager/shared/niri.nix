@@ -1,7 +1,12 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 
 {
   config = {
+    home.packages = [
+      # niri spawns this on demand to create the X11 socket and export DISPLAY
+      pkgs.xwayland-satellite
+    ];
+
     programs.niri = {
       enable = true;
       settings = {

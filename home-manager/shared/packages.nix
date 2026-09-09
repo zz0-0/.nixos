@@ -28,7 +28,13 @@
 
     # Media & Document Applications
     celluloid
-    libreoffice-fresh
+    libreoffice-stable
+
+    # Download Managers
+    gopeed
+
+    # Gaming
+    heroic
 
     # Wayland & DMS Utilities
     cliphist
