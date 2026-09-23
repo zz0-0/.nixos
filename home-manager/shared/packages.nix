@@ -20,11 +20,9 @@
     gnome-disk-utility
     evince
 
-    # Ebook
-    koodo-reader
-
     # Image, Video & Audio Applications
     bluez
+    kdePackages.kamoso
 
     # Media & Document Applications
     celluloid
