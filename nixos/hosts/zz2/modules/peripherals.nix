@@ -7,25 +7,15 @@
 
 {
   # WiFi: Intel 8086:e340 (WiFi 7 BE202)
-  # Uses iwlwifi driver - needs firmware
-  # The firmware file needed is: iwlwifi-gl-b0-fm-b0-*.ucode
-
-  # Ensure firmware is available
-  hardware.enableRedistributableFirmware = true;
-
+  # The stock iwlwifi/iwlmvm/btintel modules are left to udev autoload.
+  # Loading them explicitly in boot.kernelModules put iwlmvm's firmware load
+  # (about 1.6s) on the boot critical path. The custom btintel_pcie_fixed and
+  # goodix-gt7868q modules stay explicit because they are not autoloaded.
   boot.kernelModules = [
-    # WiFi
-    "iwlwifi"
-    "iwlmvm"
-    "btintel"
-    # I2C controllers (needed for the Goodix touchpad via i2c_hid_acpi + hid-multitouch)
+    # I2C controllers needed for the Goodix touchpad via i2c_hid_acpi
     "i2c-designware-pci"
     "i2c-designware-core"
   ];
-
-  boot.extraModprobeConfig = ''
-    options iwlwifi power_save=1
-  '';
 
   # Kernel params for Goodix touchpad / laptop hardware
   boot.kernelParams = [

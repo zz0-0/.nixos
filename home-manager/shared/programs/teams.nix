@@ -16,8 +16,10 @@
     };
     Service = {
       Type = "simple";
+      ExecStartPre = "${pkgs.coreutils}/bin/sleep 4";
       ExecStart = "${pkgs.teams-for-linux}/bin/teams-for-linux";
       Restart = "on-failure";
+      RestartSec = 5;
     };
   };
 }

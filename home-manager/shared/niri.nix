@@ -84,6 +84,14 @@
                 at-startup = true;
                 app-id = "^teams-for-linux$";
               }
+              {
+                at-startup = true;
+                app-id = "^evolution$";
+              }
+              {
+                at-startup = true;
+                app-id = "^org\\.gnome\\.Evolution$";
+              }
             ];
             open-on-workspace = "mail";
             open-focused = false;

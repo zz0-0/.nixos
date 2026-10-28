@@ -12,37 +12,28 @@
   # openresolv has a bug where it only writes the first nameserver.
   networking.resolvconf.enable = false;
 
-  # /etc/resolv.conf: ONLY point to AdGuardHome on localhost.
-  # AdGuardHome handles upstream fallback internally — a second nameserver here
-  # would let glibc bypass ad-blocking if 127.0.0.1 is momentarily slow.
+  # /etc/resolv.conf: AdGuardHome on localhost is the primary resolver.
+  # A second public resolver is kept only as a fallback for the case where
+  # AdGuard is temporarily down; glibc tries 127.0.0.1 first and only falls
+  # through after the timeout. Do not pin individual CDN IPs here — those
+  # change and a stale entry breaks builds in a much more confusing way.
   #
   # timeout:3  → if no reply in 3 s, retry (was 1 s — too aggressive for builds)
   # attempts:3 → retry twice before giving up
   # edns0      → allow larger DNS packets (needed for DNSSEC, large filter lists)
   environment.etc."resolv.conf".text = ''
     nameserver 127.0.0.1
+    nameserver 1.1.1.1
     options edns0 timeout:3 attempts:3
-  '';
-
-  # Hardcoded fallback IPs for critical build dependencies.
-  # If AdGuard/DNS is temporarily unreachable, /etc/hosts keeps nix builds working.
-  # These are CDN IPs (Fastly, GitHub Pages) — they rarely change.
-  networking.extraHosts = ''
-    151.101.2.137 static.crates.io
-    151.101.130.137 static.crates.io
-    65.8.140.2 crates.io
-    4.237.22.38 github.com
-    185.199.111.133 raw.githubusercontent.com
-    185.199.109.133 raw.githubusercontent.com
   '';
 
   services.adguardhome = {
     enable = true;
-    host = "127.0.0.1";
-    port = 3000;
     mutableSettings = false;
     openFirewall = false;
     settings = {
+      # Web UI / API listen address (replaces deprecated host/port options)
+      http.address = "127.0.0.1:3000";
       schema_version = 34; # AdGuardHome 0.107.74
 
       dns = {
@@ -78,10 +69,10 @@
         ];
 
         # ── Caching ────────────────────────────────────────────────────
-        cache_size = 4194304;       # 4 MB
-        cache_ttl_min = 600;        # Don't let TTLs drop below 10 min
-        cache_ttl_max = 86400;      # Cap TTLs at 24 h
-        cache_optimistic = true;    # Serve from cache while refreshing in background
+        cache_size = 4194304; # 4 MB
+        cache_ttl_min = 600; # Don't let TTLs drop below 10 min
+        cache_ttl_max = 86400; # Cap TTLs at 24 h
+        cache_optimistic = true; # Serve from cache while refreshing in background
 
         # ── EDNS Client Subnet ─────────────────────────────────────────
         # Sends a portion of your IP to upstreams so CDNs can route you to
@@ -105,12 +96,12 @@
 
         # ── Security & rate-limiting ───────────────────────────────────
         enable_dnssec = true;
-        ratelimit = 0;             # Disabled — localhost builds need high QPS
+        ratelimit = 0; # Disabled — localhost builds need high QPS
       };
 
       filtering = {
         enabled = true;
-        update_interval = 24;       # Refresh filter lists every 24 hours
+        update_interval = 24; # Refresh filter lists every 24 hours
 
         filters = [
           # 1 — AdGuard DNS filter (baseline ad + tracker blocking)

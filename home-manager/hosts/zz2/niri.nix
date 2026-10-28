@@ -9,7 +9,10 @@
         Description = "A scrollable-tiling Wayland compositor";
         BindsTo = [ "graphical-session.target" ];
         Before = [ "graphical-session.target" ];
-        Wants = [ "graphical-session-pre.target" "xdg-desktop-autostart.target" ];
+        Wants = [
+          "graphical-session-pre.target"
+          "xdg-desktop-autostart.target"
+        ];
         After = [ "graphical-session-pre.target" ];
         PartOf = [ "graphical-session.target" ];
       };
@@ -17,11 +20,12 @@
         Slice = "session.slice";
         Type = "notify";
         ExecStart = "${config.programs.niri.package}/bin/niri --session";
-        # Multi-GPU: do not restrict glvnd/Vulkan to Intel-only.
-        # Without these overrides, niri auto-discovers both GPUs and creates
-        # separate renderers per GPU — Intel for eDP, NVIDIA for HDMI.
-        # NVIDIA stays in D3cold when no external monitor is connected.
-        Environment = [];
+        # niri auto-discovers both GPUs and creates a renderer per GPU:
+        # Intel for eDP, NVIDIA for HDMI. The NVIDIA GPU is only kept awake
+        # while an output is connected to it; the actual dGPU runtime-D3
+        # behaviour is controlled by the kernel/NVIDIA driver, not by this
+        # unit. Do not force a single renderer through environment variables
+        # here, or HDMI output stops working.
       };
     };
   };

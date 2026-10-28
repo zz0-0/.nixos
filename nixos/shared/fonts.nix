@@ -20,7 +20,7 @@
       defaultFonts = {
         sansSerif = [ "Noto Sans" ];
         serif = [ "Noto Serif" ];
-        monospace = [ "Noto Mono" ];
+        monospace = [ "Noto Sans Mono" ];
         emoji = [ "Noto Color Emoji" ];
       };
       cache32Bit = true;

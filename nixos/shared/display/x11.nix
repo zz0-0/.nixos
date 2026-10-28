@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 
@@ -20,9 +19,6 @@
         "nvidia"
         "intel"
       ];
-      displayManager = {
-        setupCommands = "${pkgs.numlockx}/bin/numlockx on ";
-      };
     };
   };
 }

@@ -9,7 +9,7 @@
 {
   services = {
     displayManager = {
-      dms-greeter = {
+      dux-greeter = {
         enable = true;
         compositor = {
           name = "niri";

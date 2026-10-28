@@ -14,8 +14,16 @@
 #
 # Fix: Patch the bundled hid-multitouch.c to not register ABS_MT_PRESSURE.
 # This forces libinput to fall back to BTN_TOUCH-based detection, which works.
+#
+# Checked against Linux 7.3: upstream hid-multitouch still lists Goodix
+# 0x01E8/0x01E9 only, not this 0x01E7 device, and the pressure quirk is not
+# upstream. Keep this out-of-tree driver until both land.
 
 let
+  kernel = config.boot.kernelPackages.kernel;
+  inherit (config.boot.kernelPackages) kernelModuleMakeFlags;
+  cmdSign = lib.findFirst (flag: lib.hasPrefix "cmd_sign=" flag) "" kernelModuleMakeFlags;
+
   # Pinned to c4c4cca (2025-08-02, current main) — bump deliberately and
   # update the hash when pulling a newer revision.
   goodix-src = pkgs.fetchFromGitHub {
@@ -29,10 +37,13 @@ let
     pname = "goodix-gt7868q";
     version = "unstable";
     src = goodix-src;
-    nativeBuildInputs = [ config.boot.kernelPackages.kernel.dev ];
+    nativeBuildInputs = [
+      config.boot.kernelPackages.kernel.dev
+    ]
+    ++ config.boot.kernelPackages.kernel.moduleBuildDependencies;
 
     postPatch = ''
-      # Fix timer API changes in kernel 6.18+
+      # Fix timer API changes in newer kernels
       sed -i 's/del_timer(&td->release_timer)/timer_delete(\&td->release_timer)/g' hid-multitouch.c
       sed -i 's/del_timer_sync(&td->release_timer)/timer_delete_sync(\&td->release_timer)/g' hid-multitouch.c
       sed -i 's/struct mt_device \*td = from_timer(td, t, release_timer)/struct mt_device *td = container_of(t, struct mt_device, release_timer)/g' hid-multitouch.c
@@ -60,8 +71,12 @@ let
     '';
 
     installPhase = ''
-      mkdir -p $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/hid
-      cp goodix-gt7868q.ko $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/hid/
+      runHook preInstall
+      make -C ${kernel.dev}/lib/modules/${kernel.modDirVersion}/build M=$PWD \
+        INSTALL_MOD_PATH=$out INSTALL_MOD_DIR=kernel/drivers/hid \
+        '${cmdSign}' \
+        modules_install
+      runHook postInstall
     '';
   };
 in

@@ -1,12 +1,18 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  dmsPkg,
+  ...
+}:
 
 {
   programs.dank-material-shell = {
     enable = true;
+    package = dmsPkg;
 
     niri = {
       enableKeybinds = false;
-      enableSpawn = false;  # systemd handles bar spawning (enableSpawn would duplicate)
+      enableSpawn = false; # systemd handles bar spawning (enableSpawn would duplicate)
     };
 
     systemd = {

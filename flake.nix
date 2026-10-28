@@ -19,9 +19,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    devshell = {
-      url = "github:zz0-0/.devshell";
-      inputs.nixpkgs.follows = "nixpkgs";
+    creamlinux-installer = {
+      url = "github:Novattz/creamlinux-installer";
+      flake = false;
     };
   };
 
@@ -30,7 +30,6 @@
       self,
       nixpkgs,
       home-manager,
-      devshell,
       dankMaterialShell,
       niri,
       ...
@@ -52,12 +51,31 @@
         doCheck = false;
       });
 
+      # DMS Go tests bind unix sockets under TMPDIR; Nix's long build paths
+      # exceed the 108-byte sockaddr_un limit and fail with EINVAL, so skip
+      # checks (same rationale as niriPkg above).
+      dmsPkg = (inputs.dankMaterialShell.lib.mkDmsShell pkgs).overrideAttrs (_: {
+        doCheck = false;
+      });
+
+      # CreamLinux (DLC manager for Steam). WEBKIT_DISABLE_DMABUF_RENDERER is
+      # required on NVIDIA systems per the upstream README.
+      creamlinux = (import inputs.creamlinux-installer { inherit pkgs; }).overrideAttrs (old: {
+        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.makeWrapper ];
+        postFixup = (old.postFixup or "") + ''
+          wrapProgram $out/bin/creamlinux \
+            --set WEBKIT_DISABLE_DMABUF_RENDERER 1
+        '';
+      });
+
       specialArgs = {
         inherit
           username
           systemVersion
           system
           niriPkg
+          dmsPkg
+          creamlinux
           ;
         niri = inputs.niri;
         dankMaterialShell = inputs.dankMaterialShell;
@@ -85,10 +103,20 @@
           };
         }
         ({ pkgs, ... }: {
-          # xdg-desktop-portal-gnome is required for screencasting on niri
+          # Portals are managed at the NixOS level. Keeping this out of
+          # Home Manager avoids duplicate portal service files on D-Bus.
           xdg.portal = {
             enable = true;
-            extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
+            xdgOpenUsePortal = true;
+            extraPortals = [
+              pkgs.xdg-desktop-portal-gnome
+              pkgs.xdg-desktop-portal-gtk
+            ];
+            config = {
+              common.default = [ "gtk" ];
+              niri."org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
+              niri."org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+            };
           };
         })
       ];
@@ -101,7 +129,7 @@
           homeModules = ./home-manager/hosts/zz/default.nix;
         };
         zz2 = {
-          description = "New laptop (Intel i7-358H + NVIDIA RTX 5060)";
+          description = "New laptop (Intel Core Ultra 7 356H + NVIDIA RTX 5060)";
           nixosModules = ./nixos/hosts/zz2;
           homeModules = ./home-manager/hosts/zz2/default.nix;
         };
@@ -150,8 +178,22 @@
         )
       );
 
-      devShells.x86_64-linux.default = devshell.lib.x86_64-linux.nix {
-        extraPackages = [ home-manager.packages.${system}.default ];
+      devShells.x86_64-linux.default = pkgs.mkShell {
+        packages =
+          with pkgs;
+          [
+            deadnix
+            nil
+            nixd
+            nixfmt
+            statix
+          ]
+          ++ [ home-manager.packages.${system}.default ];
+        shellHook = ''
+          echo "NixOS configuration shell — nil, nixd, statix, nixfmt, deadnix"
+        '';
       };
+
+      formatter.x86_64-linux = pkgs.nixfmt-tree;
     };
 }

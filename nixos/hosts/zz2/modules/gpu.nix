@@ -5,6 +5,21 @@
   ...
 }:
 
+let
+  nvidiaPackages = config.boot.kernelPackages.nvidiaPackages.latest;
+
+  # NVIDIA 615 runs probe in an nv-probe kthread. On Linux 7.3, kthreads
+  # start with an empty nullfs root, so the driver's filp_open() on
+  # /sys/bus/pci/devices/<id>/config fails and it disables runtime D3
+  # ("Runtime D3 status: Not supported"). This is the CachyOS fix that
+  # wraps the lookup in scoped_with_init_fs(); it makes RTD3 report
+  # "Enabled (fine-grained)" again on 7.3. Remove once NVIDIA ships it.
+  nvidiaPatched = nvidiaPackages // {
+    open = nvidiaPackages.open.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ../patches/nvidia-rtd3-7.3.patch ];
+    });
+  };
+in
 {
   # NOTE: Do NOT set __NV_PRIME_RENDER_OFFLOAD or __GLX_VENDOR_LIBRARY_NAME
   # globally — that forces EVERY app (compositor, terminal, browser) onto
@@ -25,7 +40,7 @@
   hardware.nvidia = {
     # RTX 5060 (Blackwell) requires open kernel modules
     open = true;
-    package = config.boot.kernelPackages.nvidiaPackages.latest;
+    package = nvidiaPatched;
     nvidiaSettings = true;
     modesetting.enable = true;
     prime = {

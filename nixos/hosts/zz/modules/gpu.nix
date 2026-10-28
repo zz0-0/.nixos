@@ -24,4 +24,11 @@
     powerManagement.enable = true;
     powerManagement.finegrained = true;
   };
+
+  # zz's Intel GPU uses the i915 driver. On zz2 the GPU uses xe, where these
+  # options are inert, so they live in the host-specific module rather than
+  # in nixos/shared/power.nix.
+  boot.extraModprobeConfig = ''
+    options i915 enable_fbc=1 enable_psr=1 enable_guc=3
+  '';
 }

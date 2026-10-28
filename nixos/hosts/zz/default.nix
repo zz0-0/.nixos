@@ -1,3 +1,5 @@
+{ ... }:
+
 {
   imports = [
     ./hardware-configuration.nix
@@ -7,26 +9,13 @@
     ./modules/gpu.nix
     ./modules/storage.nix
 
-    # Shared modules
-    ../../shared/boot.nix
-    ../../shared/bluetooth.nix
-    ../../shared/desktop.nix
-    ../../shared/dns.nix
-    ../../shared/fonts.nix
-    ../../shared/firmware.nix
-    ../../shared/i18n.nix
-    ../../shared/network.nix
-    ../../shared/nix.nix
-    ../../shared/power.nix
-    ../../shared/programs/steam.nix
-    ../../shared/security.nix
-    ../../shared/users.nix
-
-    # Shared display/audio modules
-    ../../shared/display/x11.nix
-    ../../shared/display/dms.nix
-    ../../shared/audio/pipewire.nix
+    # Shared NixOS baseline
+    ../../shared
   ];
+
+  # zz does not override laptop.display, so the AC/battery display script
+  # leaves brightness and mode alone on this host. Add values here if you
+  # want the same power-state switching as zz2.
 
   system.stateVersion = "26.05";
 }

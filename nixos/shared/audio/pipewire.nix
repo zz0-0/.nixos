@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   # Enable realtime priority for audio (prevents dropout/glitches)
@@ -13,6 +18,12 @@
     pulse.enable = true;
 
     # Enable WirePlumber session manager (includes Bluetooth auto-switch by default)
-    wireplumber.enable = true;
+    wireplumber = {
+      enable = true;
+
+      extraConfig."51-bluez-no-msbc" = {
+        "monitor.bluez.properties"."bluez5.enable-msbc" = false;
+      };
+    };
   };
 }
