@@ -24,7 +24,7 @@
       Type = "oneshot";
       StateDirectory = "acme-sh";
       StateDirectoryMode = "0700";
-      EnvironmentFile = "/run/secrets/aliyun-acme.env";
+      EnvironmentFile = "/var/lib/acme-sh/aliyun.env";
       ExecStart = "${pkgs.acme-sh}/bin/acme.sh --cron --home /var/lib/acme-sh";
     };
   };
