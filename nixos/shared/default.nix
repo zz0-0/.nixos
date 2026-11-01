@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./acme-sh.nix
     ./audio/pipewire.nix
     ./bluetooth.nix
     ./boot.nix
