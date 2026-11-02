@@ -71,6 +71,7 @@
     pulseaudio
 
     # AI
+    deepseek-harness
     opencode
   ];
 }

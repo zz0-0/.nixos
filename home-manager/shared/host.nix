@@ -24,6 +24,7 @@
     dankMaterialShell.homeModules.dank-material-shell
     dankMaterialShell.homeModules.niri
     ./packages.nix
+    ./programs/dsh.nix
     ./programs/dms.nix
     ./programs/editor.nix
     ./programs/evolution.nix
