@@ -10,7 +10,8 @@ Multi-host NixOS configuration with shared modules and host-specific settings.
 ├── secrets/                            # encrypted sops payloads
 ├── flake.nix                          # Flake entry point, hosts, checks, devshell
 ├── scripts/
-│   └── build-hosts.sh                 # build both hosts before switching
+│   ├── build-hosts.sh                 # build both hosts before switching
+│   └── switch-host.sh                 # build, diff, confirm, then switch
 ├── nixos/
 │   ├── shared/
 │   │   ├── default.nix                # Aggregator: imports the shared baseline
@@ -87,6 +88,13 @@ sudo nixos-rebuild switch --flake .#zz2
 ```
 
 `zz` uses the same sequence with `.#zz` and `result-zz`.
+
+Or use the wrapper, which builds, shows the closure diff, asks for
+confirmation, and then switches:
+
+```bash
+./scripts/switch-host.sh zz2
+```
 
 Use `nixos-rebuild` as the single entry point. Home Manager is embedded as a
 NixOS module (`home-manager.useGlobalPkgs = true`, `useUserPackages = true`).
