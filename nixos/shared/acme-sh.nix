@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   ...
 }:
@@ -8,15 +9,12 @@
     acme-sh
   ];
 
-  # After importing the encrypted env with scripts/import-acme-secret.sh,
-  # define the secret here (and add `config` to this module's arguments):
-  #
-  # sops.secrets."acme-sh/aliyun.env" = {
-  #   sopsFile = ../../secrets/acme-sh/aliyun.env;
-  #   format = "dotenv";
-  #   owner = "root";
-  #   mode = "0400";
-  # };
+  sops.secrets."acme-sh/aliyun.env" = {
+    sopsFile = ../../secrets/acme-sh/aliyun.env;
+    format = "dotenv";
+    owner = "root";
+    mode = "0400";
+  };
 
   systemd.services.acme-sh = {
     description = "Renew acme.sh certificates and deploy to Aliyun CDN";
@@ -34,9 +32,7 @@
       Type = "oneshot";
       StateDirectory = "acme-sh";
       StateDirectoryMode = "0700";
-      # Once the encrypted secret exists, replace this with:
-      #   EnvironmentFile = config.sops.secrets."acme-sh/aliyun.env".path;
-      EnvironmentFile = "/var/lib/acme-sh/aliyun.env";
+      EnvironmentFile = config.sops.secrets."acme-sh/aliyun.env".path;
       ExecStart = "${pkgs.acme-sh}/bin/acme.sh --cron --home /var/lib/acme-sh";
     };
   };

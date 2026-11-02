@@ -7,6 +7,7 @@ Multi-host NixOS configuration with shared modules and host-specific settings.
 ```
 .
 ├── .sops.yaml                          # age recipients for secrets/
+├── secrets/                            # encrypted sops payloads
 ├── flake.nix                          # Flake entry point, hosts, checks, devshell
 ├── scripts/
 │   └── build-hosts.sh                 # build both hosts before switching
@@ -249,16 +250,8 @@ age key `~/.config/sops/age/keys.txt`. The public key is in `.sops.yaml`; the
 private key never goes in the repo. **Back the private key up** — without it the
 encrypted secrets cannot be recovered.
 
-One-time migration of the existing root-only Aliyun env:
-
-```bash
-nix develop
-./scripts/import-acme-secret.sh
-git add secrets/acme-sh/aliyun.env
-```
-
-Then, in `nixos/shared/acme-sh.nix` (add `config` to its arguments), define
-the secret and point the service at it:
+The Aliyun env is stored encrypted at `secrets/acme-sh/aliyun.env` and
+`nixos/shared/acme-sh.nix` reads it through sops-nix:
 
 ```nix
 sops.secrets."acme-sh/aliyun.env" = {
@@ -272,7 +265,16 @@ sops.secrets."acme-sh/aliyun.env" = {
 EnvironmentFile = config.sops.secrets."acme-sh/aliyun.env".path;
 ```
 
-Later edits use
+If the credentials are rotated, re-import them:
+
+```bash
+nix develop
+./scripts/import-acme-secret.sh
+git add secrets/acme-sh/aliyun.env
+```
+
+The script reads `/var/lib/acme-sh/aliyun.env` with sudo and rewrites the
+encrypted file. Later edits use
 `sops --input-type dotenv --output-type dotenv secrets/acme-sh/aliyun.env`.
 The `sops` and `age` tools are in the repo devshell.
 
