@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -43,11 +44,22 @@ in
 
   programs.fish = {
     enable = true;
+
+    # Do not let Home Manager's starship integration bake the starship store
+    # path into fish_prompt: a long-lived shell then breaks after every switch
+    # when that store path is GC'd. Invoke starship through the stable HM
+    # profile symlink instead, so the generated prompt always resolves to the
+    # current generation.
+    interactiveShellInit = ''
+      if test "$TERM" != dumb
+        ${config.home.profileDirectory}/bin/starship init fish | source
+      end
+    '';
   };
 
   programs.starship = {
     enable = true;
-    enableFishIntegration = true;
+    enableFishIntegration = false;
   };
 
   programs.direnv = {
