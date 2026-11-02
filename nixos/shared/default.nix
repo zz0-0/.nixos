@@ -8,7 +8,6 @@
     ./boot.nix
     ./desktop.nix
     ./display/dms.nix
-    ./display/x11.nix
     ./dns.nix
     ./fonts.nix
     ./firmware.nix
@@ -19,6 +18,7 @@
     ./programs/evolution.nix
     ./programs/steam.nix
     ./security.nix
+    ./sops.nix
     ./users.nix
   ];
 }

@@ -23,6 +23,11 @@
       url = "github:Novattz/creamlinux-installer";
       flake = false;
     };
+
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -30,8 +35,7 @@
       self,
       nixpkgs,
       home-manager,
-      dankMaterialShell,
-      niri,
+      sops-nix,
       ...
     }:
     let
@@ -77,13 +81,13 @@
           dmsPkg
           creamlinux
           ;
-        niri = inputs.niri;
-        dankMaterialShell = inputs.dankMaterialShell;
+        inherit (inputs) niri dankMaterialShell;
       };
 
       # Common NixOS modules shared between all hosts
       commonModules = [
         home-manager.nixosModules.home-manager
+        sops-nix.nixosModules.sops
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
@@ -140,7 +144,7 @@
         name:
         nixpkgs.lib.nixosSystem {
           inherit specialArgs system;
-          pkgs = pkgs;
+          inherit pkgs;
           modules = [
             hosts.${name}.nixosModules
           ]
@@ -182,10 +186,12 @@
         packages =
           with pkgs;
           [
+            age
             deadnix
             nil
             nixd
             nixfmt
+            sops
             statix
           ]
           ++ [ home-manager.packages.${system}.default ];

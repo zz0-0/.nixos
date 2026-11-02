@@ -1,0 +1,7 @@
+# NixOS modules conventionally use `{ ... }:` and repeated top-level
+# attribute paths (e.g. `boot.kernelModules` plus
+# `boot.extraModulePackages`). Both are statix style warnings, not defects.
+disabled = [
+  "empty_pattern",
+  "repeated_keys",
+]

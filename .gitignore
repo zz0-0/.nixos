@@ -230,11 +230,12 @@ lerna-debug.log*
 # Environment & Secrets
 # =============================================================================
 
+# Encrypted sops secrets under secrets/ are tracked; keep plaintext out.
+# `secrets/` is deliberately not ignored.
 .env
 .env.*
 !.env.example
 !.env.test
-secrets/
 *.pem
 *.key
 credentials.json

@@ -6,12 +6,15 @@ Multi-host NixOS configuration with shared modules and host-specific settings.
 
 ```
 .
+├── .sops.yaml                          # age recipients for secrets/
 ├── flake.nix                          # Flake entry point, hosts, checks, devshell
+├── scripts/
+│   └── build-hosts.sh                 # build both hosts before switching
 ├── nixos/
 │   ├── shared/
 │   │   ├── default.nix                # Aggregator: imports the shared baseline
+│   │   ├── acme-sh.nix                # acme.sh renewal + Aliyun deploy
 │   │   ├── audio/pipewire.nix
-│   │   ├── display/x11.nix            # X server, libinput, keyboard layout
 │   │   ├── display/dms.nix            # DMS greeter (niri compositor)
 │   │   ├── programs/                  # evolution, Steam
 │   │   ├── boot.nix                   # systemd-boot, kernel, boot timeout
@@ -25,6 +28,7 @@ Multi-host NixOS configuration with shared modules and host-specific settings.
 │   │   ├── nix.nix                    # nix settings, caches, GC/optimise
 │   │   ├── power.nix                  # power profiles, AC/battery display service
 │   │   ├── security.nix               # polkit, gnome-keyring
+│   │   ├── sops.nix                   # sops-nix age key
 │   │   └── users.nix
 │   └── hosts/
 │       ├── zz/                        # Original laptop
@@ -53,9 +57,11 @@ Multi-host NixOS configuration with shared modules and host-specific settings.
     │   ├── theme.nix                  # GTK/QT themes, dconf
     │   └── programs/
     │       ├── dms.nix
-    │       ├── editor.nix             # zed, emacs
+    │       ├── dsh.nix                # dsh web UI + launcher
+    │       ├── editor.nix             # zed, Emacs (doom-acario-dark)
     │       ├── evolution.nix
     │       ├── git.nix
+    │       ├── pbz.nix                # Phantom Blade Zero helpers
     │       └── teams.nix
     └── hosts/
         ├── zz/
@@ -69,10 +75,17 @@ Multi-host NixOS configuration with shared modules and host-specific settings.
 
 ### Building NixOS configurations
 
+Build first — evaluation alone does not catch kernel-module, patch, or package
+build failures:
+
 ```bash
-sudo nixos-rebuild switch --flake .#zz
+./scripts/build-hosts.sh zz2          # current laptop
+# ./scripts/build-hosts.sh            # both hosts
+nix store diff-closures /run/current-system result-zz2
 sudo nixos-rebuild switch --flake .#zz2
 ```
+
+`zz` uses the same sequence with `.#zz` and `result-zz`.
 
 Use `nixos-rebuild` as the single entry point. Home Manager is embedded as a
 NixOS module (`home-manager.useGlobalPkgs = true`, `useUserPackages = true`).
@@ -113,10 +126,62 @@ the zz2 boot breakdown before this change was:
 firmware 5.43s + loader 6.36s + kernel 1.81s + initrd 2.70s + userspace 5.07s
 ```
 
+systemd-boot can also store an explicit menu timeout in the `LoaderConfigTimeout`
+EFI variable, and that NVRAM value overrides `loader.conf`. It survives
+rebuilds and firmware updates, so the menu can silently go back to a longer
+timeout even though this file says 2. `nixos/shared/boot.nix` clears the
+variable as part of bootloader installation, making the declarative value
+authoritative. To inspect it manually:
+
+```bash
+od -An -tx1 -v /sys/firmware/efi/efivars/LoaderConfigTimeout-*
+```
+
 The stock WiFi/Bluetooth modules are left to udev autoload instead of
 `boot.kernelModules`, so `iwlmvm`'s firmware load no longer blocks
 `systemd-modules-load`. The custom `btintel_pcie_fixed` and
 `goodix-gt7868q` modules remain explicit because they are not autoloaded.
+
+## Emacs
+
+`home-manager/shared/programs/editor.nix` installs vanilla Emacs 31 (pgtk)
+with `envrc` and the built-in Eglot LSP client. `envrc-global-mode` loads the
+nearest `.envrc` per buffer, so Eglot finds the language servers provided by
+the devshell flake instead of requiring system-wide installs. No generated
+Emacs files are needed: `envrc` reads the project `.envrc` directly.
+
+Environment selection is per buffer: `envrc` walks up from the buffer's
+`default-directory` to the nearest `.envrc`. Starting Emacs from a project
+directory (or opening a file or directory there) loads that devshell
+automatically. The initial `*scratch*` buffer uses the directory Emacs was
+launched from; launched from the desktop it is usually `$HOME`, so the project
+environment is loaded when you open a project file. The modeline shows
+`envrc[on]`; run `direnv allow` once per project if it shows `denied`.
+
+Language modes/servers wired up: Nix (`nixd`), Python
+(`basedpyright-langserver`), Rust/Bevy (`rust-analyzer`), Dart/Flutter
+(`dart language-server`), Java (`jdtls`), LaTeX (`texlab`), and Markdown
+(`markdown-oxide`). TypeScript, YAML and TOML get modes only. Format-on-save
+uses Apheleia (`nixfmt`, `ruff`, `rustfmt`, `dart format`, `latexindent`);
+Java is formatted through Eglot/jdtls.
+
+Eglot connects on the next command after the devshell environment finishes
+loading; if it does not, `M-x eglot` starts it manually. PostgreSQL keeps the
+built-in `sql-mode` (`M-x sql-postgres`); the video devshell has no TypeScript
+language server, so `.ts` files get `typescript-mode` syntax only. The
+devshell flake itself lives in `~/.devshell`; it supplies language toolchains,
+not Emacs-specific files.
+
+## Firmware updates
+
+`services.fwupd.enable` is on. fwupd refreshes LVFS metadata automatically via
+`fwupd-refresh.timer`, but firmware/BIOS installation is intentionally manual:
+
+```bash
+sudo fwupdmgr get-devices
+sudo fwupdmgr get-updates
+sudo fwupdmgr update
+```
 
 ## Per-host power settings
 
@@ -135,6 +200,9 @@ laptop.display = {
   modeBattery = "3200x2000@60.001";
 };
 ```
+
+`laptop.wifi.interface` opts into the same service toggling WiFi power saving
+(off on AC, on on battery). zz2 sets it to `wlp0s20f3`.
 
 The udev rule now only triggers `power-state-change.service`; the service sets
 brightness and the power profile. A user service (`niri-display-power`) applies
@@ -173,6 +241,41 @@ Build speed also benefits from:
 - The unused `khal` overlay was removed.
 - The custom kernel modules are built only for the selected kernel.
 
+## Secrets (sops-nix)
+
+System secrets live in `secrets/` and are encrypted with sops-nix + age.
+`sops-nix` is imported by `flake.nix`; `nixos/shared/sops.nix` points it at the
+age key `~/.config/sops/age/keys.txt`. The public key is in `.sops.yaml`; the
+private key never goes in the repo. **Back the private key up** — without it the
+encrypted secrets cannot be recovered.
+
+One-time migration of the existing root-only Aliyun env:
+
+```bash
+nix develop
+./scripts/import-acme-secret.sh
+git add secrets/acme-sh/aliyun.env
+```
+
+Then, in `nixos/shared/acme-sh.nix` (add `config` to its arguments), define
+the secret and point the service at it:
+
+```nix
+sops.secrets."acme-sh/aliyun.env" = {
+  sopsFile = ../../secrets/acme-sh/aliyun.env;
+  format = "dotenv";
+  owner = "root";
+  mode = "0400";
+};
+
+# inside systemd.services.acme-sh.serviceConfig:
+EnvironmentFile = config.sops.secrets."acme-sh/aliyun.env".path;
+```
+
+Later edits use
+`sops --input-type dotenv --output-type dotenv secrets/acme-sh/aliyun.env`.
+The `sops` and `age` tools are in the repo devshell.
+
 ## Setting up a new host
 
 1. Boot the NixOS installer and run `nixos-generate-config`.
@@ -208,12 +311,16 @@ sense for one panel, GPU driver, or adapter, put it in that host's module.
 ## Validating the configuration
 
 `nix flake check` builds and validates both hosts (NixOS toplevel + Home
-Manager activation). It is useful after `nix flake update`; it is not needed
-for every switch.
+Manager activation). It is useful after `nix flake update`.
 
 ```bash
 nix flake check
 ```
+
+For the normal pre-switch check, use `./scripts/build-hosts.sh <host>`: it
+builds only the host you are about to switch and is faster than the full flake
+check. CI builds both hosts on every push. `nix flake check --no-build` is the
+fast evaluation-only variant.
 
 ## Development shell
 
