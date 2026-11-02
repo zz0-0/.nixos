@@ -1,7 +1,4 @@
 {
-  config,
-  lib,
-  pkgs,
   ...
 }:
 
@@ -34,7 +31,7 @@
     settings = {
       # Web UI / API listen address (replaces deprecated host/port options)
       http.address = "127.0.0.1:3000";
-      schema_version = 34; # AdGuardHome 0.107.74
+      schema_version = 34; # AdGuardHome 0.107.x
 
       dns = {
         bind_hosts = [ "127.0.0.1" ];
@@ -70,7 +67,7 @@
 
         # ── Caching ────────────────────────────────────────────────────
         cache_size = 4194304; # 4 MB
-        cache_ttl_min = 600; # Don't let TTLs drop below 10 min
+        cache_ttl_min = 60; # Avoid stale records when moving networks
         cache_ttl_max = 86400; # Cap TTLs at 24 h
         cache_optimistic = true; # Serve from cache while refreshing in background
 
@@ -89,10 +86,12 @@
         blocking_ipv6 = "::";
 
         # ── IPv6 ───────────────────────────────────────────────────────
-        # IPv6 is broken on this network.  Drop ALL AAAA queries so
-        # clients never try to connect over IPv6 — a common cause of
-        # "hanging" when streaming from sites that publish AAAA records.
-        aaa_disabled = true;
+        # IPv6 is broken on the uplink, so drop AAAA queries here. IPv6
+        # itself stays enabled system-wide for loopback/local services;
+        # this is intentionally different from `networking.enableIPv6`.
+        # The upstream YAML key is `aaaa_disabled` (four A's); a three-A
+        # `aaa_disabled` is silently ignored by AdGuardHome.
+        aaaa_disabled = true;
 
         # ── Security & rate-limiting ───────────────────────────────────
         enable_dnssec = true;

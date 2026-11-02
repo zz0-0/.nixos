@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   creamlinux,
   ...
@@ -59,19 +58,16 @@
     creamlinux
 
     # Wayland & DMS Utilities
-    cliphist
     dux-search
     playerctl
     wl-clip-persist
     wl-clipboard
     i2c-tools
-    matugen
 
     # Audio clients (pactl is expected by Steam and some games)
     pulseaudio
 
     # AI
     deepseek-harness
-    opencode
   ];
 }

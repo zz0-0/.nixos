@@ -1,6 +1,4 @@
 {
-  config,
-  lib,
   pkgs,
   ...
 }:
@@ -13,8 +11,11 @@
         "flakes"
       ];
       builders-use-substitutes = true;
-      max-jobs = "auto";
-      cores = 0;
+
+      # Cap total parallelism instead of letting auto/0 spawn cores*cores
+      # compile jobs on a 16-thread machine with 30 GB RAM.
+      max-jobs = 4;
+      cores = 4;
       build-users-group = "nixbld";
 
       # Keep the sandbox enabled (the default). If a specific derivation
@@ -25,8 +26,9 @@
       # store path during builds. nix.optimise below runs the same operation
       # on a timer instead.
 
+      # cache.nixos.org comes from the NixOS default; listing it here too
+      # produces a duplicate entry in nix.conf.
       substituters = [
-        "https://cache.nixos.org"
         "https://niri.cachix.org"
         "https://nix-community.cachix.org"
       ];
@@ -53,6 +55,20 @@
     libraries = with pkgs; [
       stdenv.cc.cc.lib
       zlib
+      openssl
+      curl
+      icu
+      libxml2
+      glib
+      dbus
+      fontconfig
+      freetype
+      libGL
+      libx11
+      libxext
+      libxrender
+      libxtst
+      libxi
     ];
   };
 

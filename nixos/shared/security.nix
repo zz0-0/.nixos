@@ -1,15 +1,12 @@
-{ config, lib, ... }:
+{ ... }:
 
 {
-  # Polkit - auto-approve wheel group
+  # Polkit is enabled by default. Do not auto-approve every wheel action:
+  # any process in the user session could otherwise use pkexec to become root
+  # without a password. NixOS already ships scoped rules for NetworkManager
+  # and CUPS; add narrow allowlist rules here only if a specific action needs
+  # passwordless approval.
   security.polkit.enable = true;
-  security.polkit.extraConfig = ''
-    polkit.addRule(function(action, subject) {
-      if (subject.isInGroup("wheel")) {
-        return polkit.Result.YES;
-      }
-    });
-  '';
 
   services.gnome.gnome-keyring.enable = true;
 

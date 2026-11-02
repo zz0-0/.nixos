@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 
@@ -26,7 +25,7 @@ let
   btintel-pcie-fixed = config.boot.kernelPackages.stdenv.mkDerivation {
     pname = "btintel-pcie-fixed";
     version = kernel.modDirVersion;
-    src = kernel.src;
+    inherit (kernel) src;
 
     nativeBuildInputs = [ kernel.dev ] ++ kernel.moduleBuildDependencies;
 

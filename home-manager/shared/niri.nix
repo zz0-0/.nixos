@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   config = {
@@ -23,7 +23,13 @@
           ELECTRON_OZONE_PLATFORM_HINT = "auto";
         };
 
-        input.keyboard.numlock = true;
+        input.keyboard = {
+          numlock = true;
+          xkb = {
+            layout = "us";
+            options = "numpad:mac";
+          };
+        };
         input.touchpad = {
           enable = true;
           tap = true;
@@ -119,6 +125,15 @@
           "Mod+Return" = {
             action.spawn = "wezterm";
             hotkey-overlay.title = "Terminal";
+          };
+          "Mod+E" = {
+            action.spawn = [
+              "emacsclient"
+              "-c"
+              "-a"
+              ""
+            ];
+            hotkey-overlay.title = "Emacs";
           };
 
           # Media

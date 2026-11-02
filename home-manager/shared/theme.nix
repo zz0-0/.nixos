@@ -1,7 +1,5 @@
 {
-  config,
   pkgs,
-  lib,
   ...
 }:
 
@@ -36,8 +34,9 @@
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       gtk-theme = "adw-gtk3-dark";
+      # libadwaita ignores this legacy key and logs a warning; color-scheme
+      # above is the supported way to request dark mode.
       color-scheme = "prefer-dark";
-      gtk-application-prefer-dark-theme = true;
     };
   };
 

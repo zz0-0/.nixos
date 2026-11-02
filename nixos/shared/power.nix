@@ -8,6 +8,7 @@
 
 let
   display = config.laptop.display;
+  wifi = config.laptop.wifi.interface;
 
   adapter = "/sys/class/power_supply/${config.laptop.power.adapter}/online";
   backlight = "/sys/class/backlight/${display.backlight}/brightness";
@@ -26,6 +27,18 @@ let
       value = if online == "0" then display.modeBattery else display.modeAC;
     in
     if value == null then "" else value;
+
+  # Toggle WiFi power saving with AC state. The interface is optional so
+  # hosts without a configured wireless device keep the old behaviour.
+  wifiPowerScript =
+    if wifi == null then
+      ""
+    else
+      ''
+        if [ -d "/sys/class/net/${wifi}" ]; then
+          ${pkgs.iw}/bin/iw dev ${wifi} set power_save "$WIFI_POWER" 2>/dev/null || true
+        fi
+      '';
 
   # Runs as the logged-in user, after niri has created its socket.
   niriModeScript = pkgs.writeShellScript "niri-display-power" ''
@@ -68,10 +81,12 @@ let
       BRIGHTNESS="${brightnessFor "0"}"
       MODE="${modeFor "0"}"
       PROFILE="power-saver"
+      WIFI_POWER="on"
     else
       BRIGHTNESS="${brightnessFor "1"}"
       MODE="${modeFor "1"}"
       PROFILE="performance"
+      WIFI_POWER="off"
     fi
 
     if [ -n "$BRIGHTNESS" ] && [ -w "$BACKLIGHT" ]; then
@@ -79,6 +94,8 @@ let
     fi
 
     ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set "$PROFILE" 2>/dev/null || true
+
+    ${wifiPowerScript}
 
     # If niri is already running, apply the refresh-rate change immediately.
     # At boot the user service below does it after login.
@@ -99,6 +116,12 @@ in
       type = lib.types.str;
       default = "ADP1";
       description = "power_supply device name used for AC state.";
+    };
+
+    wifi.interface = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Wireless interface used to toggle power saving on AC/battery.";
     };
 
     display = lib.mkOption {
@@ -179,9 +202,12 @@ in
     # ── AC/battery state change ────────────────────────────────────────────
     systemd.services.power-state-change = {
       description = "Apply AC/battery power settings";
+      # power-profiles-daemon.service is ordered After=multi-user.target, so
+      # pulling this unit into multi-user.target creates an ordering cycle.
+      # Hook into graphical.target instead (which is where PPD is wanted).
       after = [ "power-profiles-daemon.service" ];
       wants = [ "power-profiles-daemon.service" ];
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = [ "graphical.target" ];
       path = [ pkgs.coreutils ];
       serviceConfig = {
         Type = "oneshot";

@@ -1,12 +1,12 @@
 {
-  config,
-  lib,
   pkgs,
   username,
   ...
 }:
 
 {
+  programs.fish.enable = true;
+
   users.users = {
     ${username} = {
       isNormalUser = true;
@@ -29,7 +29,7 @@
           count = 65536;
         }
       ];
-      shell = pkgs.bash;
+      shell = pkgs.fish;
     };
   };
 }

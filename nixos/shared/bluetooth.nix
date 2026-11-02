@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+_:
 
 {
   hardware.bluetooth = {
@@ -15,14 +15,8 @@
     };
   };
 
-  systemd.user.services.mpris-proxy = {
-    description = "MPRIS proxy";
-    after = [
-      "network.target"
-      "sound.target"
-    ];
-    wantedBy = [ "default.target" ];
-
-    serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
-  };
+  # BlueZ already ships mpris-proxy.service. Only enable it here: adding an
+  # ExecStart override creates a second ExecStart in the drop-in, which systemd
+  # rejects ("Service has more than one ExecStart= setting").
+  systemd.user.services.mpris-proxy.wantedBy = [ "default.target" ];
 }

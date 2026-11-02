@@ -1,5 +1,4 @@
 {
-  config,
   lib,
   pkgs,
   ...
@@ -56,10 +55,14 @@ in
     nix-direnv.enable = true;
   };
 
-  # Exec fish for interactive login shells (keep the original behavior)
+  # Any login shell that is still bash gets rewired to fish. Useful for
+  # `bash -l`, `su -`, IDE terminals and anything that ignores the passwd shell.
+  # The `$-` check keeps non-interactive `bash -l script.sh` invocations intact.
   home.file.".bash_profile".text = ''
     # Exec fish for interactive sessions only; do not exec in non-interactive shells.
-    if [[ $(${pkgs.procps}/bin/ps --no-header --pid=$PPID --format=comm) != "fish" && -z "$BASH_EXECUTION_STRING" ]]
+    if [[ $- == *i* ]] \
+      && [[ -z "$BASH_EXECUTION_STRING" ]] \
+      && [[ $(${pkgs.procps}/bin/ps --no-header --pid=$PPID --format=comm) != "fish" ]]
     then
       shopt -q login_shell && LOGIN_OPTION='--login' || LOGIN_OPTION=""
       exec ${pkgs.fish}/bin/fish $LOGIN_OPTION

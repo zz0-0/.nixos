@@ -27,5 +27,8 @@
     modeBattery = "3200x2000@60.001";
   };
 
+  # Disable WiFi power saving while on AC; re-enable it on battery.
+  laptop.wifi.interface = "wlp0s20f3";
+
   system.stateVersion = "26.05";
 }
