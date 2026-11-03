@@ -43,6 +43,7 @@
     ./programs/evolution.nix
     ./programs/git.nix
     ./programs/pbz.nix
+    ./programs/steam.nix
     ./programs/teams.nix
     ./shell.nix
     ./theme.nix
