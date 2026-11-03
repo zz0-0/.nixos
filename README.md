@@ -90,11 +90,17 @@ sudo nixos-rebuild switch --flake .#zz2
 `zz` uses the same sequence with `.#zz` and `result-zz`.
 
 Or use the wrapper, which builds, shows the closure diff, asks for
-confirmation, and then switches:
+confirmation, switches, and then collects system + Home Manager generations
+older than 7 days:
 
 ```bash
 ./scripts/switch-host.sh zz2
+GC_MAX_AGE=14d ./scripts/switch-host.sh zz2   # keep two weeks
 ```
+
+The weekly `nix.gc` timers remain; the wrapper just makes cleanup happen after
+each successful switch too. It keeps generations newer than the cutoff for
+rollback.
 
 Use `nixos-rebuild` as the single entry point. Home Manager is embedded as a
 NixOS module (`home-manager.useGlobalPkgs = true`, `useUserPackages = true`).
