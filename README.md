@@ -107,11 +107,19 @@ The weekly `nix.gc` timers remain; the wrapper just makes cleanup happen after
 each successful switch too. It keeps generations newer than the cutoff for
 rollback.
 
-Use `nixos-rebuild` as the single entry point. Home Manager is embedded as a
-NixOS module (`home-manager.useGlobalPkgs = true`, `useUserPackages = true`).
-The flake also exposes `homeConfigurations` for standalone-HM tooling, but do
-not mix `home-manager switch` with the NixOS-managed profile: it creates a
-second profile and makes activation order confusing.
+`nixos-rebuild` is the single entry point. The flake intentionally does not
+expose a standalone `homeConfigurations` output: running `home-manager switch`
+would create a second profile that shadows the NixOS-managed HM in PATH.
+
+If you previously ran `home-manager switch`, remove its `home-manager-path` from
+`~/.nix-profile`:
+
+```bash
+nix profile remove home-manager-path
+```
+
+The NixOS-managed `/etc/profiles/per-user/zz` then provides the HM tools, and
+`nixos-rebuild switch` keeps them current.
 
 ### dGPU runtime power on zz2
 

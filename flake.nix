@@ -157,29 +157,13 @@
         }
       );
 
-      homeConfigurations = nixpkgs.lib.genAttrs (builtins.attrNames hosts) (
-        name:
-        home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ hosts.${name}.homeModules ];
-          extraSpecialArgs = specialArgs;
-        }
-      );
-
-      # `nix flake check` builds and validates all hosts
+      # `nix flake check` builds and validates both hosts. Home Manager is
+      # embedded in each NixOS system, so there is no separate HM output.
       checks.x86_64-linux = builtins.listToAttrs (
-        builtins.concatLists (
-          map (name: [
-            {
-              name = "nixos-${name}";
-              value = self.nixosConfigurations.${name}.config.system.build.toplevel;
-            }
-            {
-              name = "home-${name}";
-              value = self.homeConfigurations.${name}.activationPackage;
-            }
-          ]) (builtins.attrNames hosts)
-        )
+        map (name: {
+          name = "nixos-${name}";
+          value = self.nixosConfigurations.${name}.config.system.build.toplevel;
+        }) (builtins.attrNames hosts)
       );
 
       devShells.x86_64-linux.default = pkgs.mkShell {
