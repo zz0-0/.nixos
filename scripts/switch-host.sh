@@ -37,6 +37,17 @@ fi
 
 sudo nixos-rebuild switch --flake ".#$host"
 
+# Home Manager is embedded as a NixOS module, so the switch above activates
+# home-manager-<user>.service too. Do not run `home-manager switch` separately:
+# it creates a second profile that conflicts with the NixOS-managed one.
+hm_unit="home-manager-${USER:-$(id -un)}.service"
+hm_result="$(systemctl show -p Result --value "$hm_unit" 2>/dev/null || true)"
+if [ "$hm_result" = "success" ]; then
+  echo "==> Home Manager generation activated ($hm_unit)"
+else
+  echo "warning: Home Manager activation result: ${hm_result:-unknown} ($hm_unit)" >&2
+fi
+
 echo
 echo "==> collecting old NixOS and Home Manager generations (older than $gc_age)"
 if ! sudo nix-collect-garbage --delete-older-than "$gc_age"; then
