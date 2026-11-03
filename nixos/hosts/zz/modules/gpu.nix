@@ -9,6 +9,11 @@
     enable32Bit = true;
   };
 
+  # nixpkgs keys the NVIDIA user-space graphics stack (Vulkan ICD,
+  # nvidia-smi, nvidia-settings) off `services.xserver.videoDrivers`.
+  # Setting this does not start Xorg; niri still uses xwayland-satellite.
+  services.xserver.videoDrivers = [ "nvidia" ];
+
   hardware.nvidia = {
     open = false;
     package = config.boot.kernelPackages.nvidiaPackages.legacy_580;

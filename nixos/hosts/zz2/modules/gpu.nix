@@ -36,6 +36,11 @@ in
 
   hardware.intel-gpu-tools.enable = true;
 
+  # nixpkgs keys the NVIDIA user-space graphics stack (Vulkan ICD,
+  # nvidia-smi, nvidia-settings) off `services.xserver.videoDrivers`.
+  # Setting this does not start Xorg; niri still uses xwayland-satellite.
+  services.xserver.videoDrivers = [ "nvidia" ];
+
   hardware.nvidia = {
     # RTX 5060 (Blackwell) requires open kernel modules
     open = true;
