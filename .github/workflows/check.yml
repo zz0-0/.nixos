@@ -2,10 +2,26 @@ name: check
 
 on:
   push:
+    branches: [main]
+    paths:
+      - "**/*.nix"
+      - "flake.nix"
+      - "flake.lock"
+      - ".github/workflows/**"
   pull_request:
+    paths:
+      - "**/*.nix"
+      - "flake.nix"
+      - "flake.lock"
+      - ".github/workflows/**"
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   flake:
@@ -29,19 +45,16 @@ jobs:
             nixfmt --check $(git ls-files "*.nix")
           '
 
-  # Strict build check: evaluation alone does not catch failures in the
-  # out-of-tree kernel modules or the patched NVIDIA driver. If the hosted
-  # runner runs out of disk/time, move this job to a self-hosted runner or add
-  # a binary cache (Cachix/attic).
+  # Only the active host is built automatically. The zz host is still
+  # evaluated by the flake job; build it locally when needed:
+  #   nix build .#nixosConfigurations.zz.config.system.build.toplevel
+  # This keeps Actions usage down while still catching zz2 kernel/NVIDIA
+  # build failures.
   build:
-    name: build (${{ matrix.host }})
+    name: build (zz2)
     runs-on: ubuntu-latest
     needs: flake
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        host: [zz, zz2]
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -50,5 +63,5 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      - name: Build NixOS system
-        run: nix build --no-link .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel
+      - name: Build active NixOS system
+        run: nix build --no-link .#nixosConfigurations.zz2.config.system.build.toplevel
