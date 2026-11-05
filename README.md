@@ -348,8 +348,8 @@ nix flake check
 
 For the normal pre-switch check, use `./scripts/build-hosts.sh <host>`: it
 builds only the host you are about to switch and is faster than the full flake
-check. CI builds both hosts on every push. `nix flake check --no-build` is the
-fast evaluation-only variant.
+check. There is no cloud CI (GitHub Actions is disabled); builds happen locally.
+`nix flake check --no-build` is the fast evaluation-only variant.
 
 ## Development shell
 
