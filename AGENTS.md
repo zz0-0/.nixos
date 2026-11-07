@@ -7,7 +7,7 @@
 nix flake check                   # 完整验证
 ```
 
-新 clone 先跑 `./scripts/setup.sh`（设置 git hooks 路径）。push 前 `.githooks/pre-push` 会跑完整验证。
+新 clone 先跑 `./scripts/setup.sh`（设置 git hooks 路径）。push 前 `.githooks/pre-push` 会跑完整验证和文档指针检查。
 
 ## 闸门
 

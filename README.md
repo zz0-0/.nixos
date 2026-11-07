@@ -12,7 +12,7 @@ nix flake check                    # 完整验证：两台都构建
 
 `nix flake check` 是**验证**；`build-hosts.sh` 是切换前的**快速构建**。两者都不改动系统。
 
-没有 CI。push 前由 [.githooks/pre-push](.githooks/pre-push) 跑完整验证——这是唯一的自动关卡。新 clone 先跑一次 `./scripts/setup.sh`，它把 git hooks 路径指过去。
+没有 CI。push 前由 [.githooks/pre-push](.githooks/pre-push) 跑完整验证和文档指针检查——这是唯一的自动关卡。新 clone 先跑一次 `./scripts/setup.sh`，它把 git hooks 路径指过去。
 
 `nixos-rebuild` 是唯一入口。flake 有意不暴露 `homeConfigurations`：单独跑 `home-manager switch` 会创建第二个 profile，遮蔽 NixOS 托管的那份。
 
@@ -34,6 +34,7 @@ nix flake check                    # 完整验证：两台都构建
 
 | 文件 | 回答什么 |
 |---|---|
+| [docs/workarounds.md](docs/workarounds.md) | 哪些是临时补丁，各自什么时候能删 |
 | [docs/packages.md](docs/packages.md) | 装在哪里：声明式、`nix profile`、还是 `nix run` |
 | [docs/secrets.md](docs/secrets.md) | sops + age，含轮换和恢复 |
 | [docs/new-host.md](docs/new-host.md) | 加一台机器 |
