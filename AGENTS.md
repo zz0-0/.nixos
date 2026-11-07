@@ -1,36 +1,18 @@
-# Maintaining this machine
+# NixOS configuration
 
-This repo is the NixOS + Home Manager configuration for hosts `zz2` (laptop) and
-`zz`. It is the only place a machine-wide change is made.
+## 入口
 
-## The loop
+```bash
+./scripts/build-hosts.sh          # 构建 zz 和 zz2
+nix flake check                   # 求值检查
+```
 
-1. **Edit the right file**
-   - user CLI packages → `home-manager/shared/packages.nix`
-   - shell/editor/desktop program → `home-manager/shared/programs/*.nix`
-   - system service, driver, kernel, boot → `nixos/shared/*.nix`
-   - one host only → `nixos/hosts/<host>/**`
-2. **Build before touching the running system**
+## 闸门
 
-   ```bash
-   ./scripts/build-hosts.sh zz2
-   ```
+切换系统只能走 `./scripts/switch-host.sh`。不要直接 `nixos-rebuild switch`——那会跳过构建、closure diff、确认和 GC。
 
-3. **Switch** — needs `sudo`; ask the user to run or confirm:
+不要单独跑 `home-manager switch`：它作为 NixOS 模块嵌入，单独跑会创建冲突的 profile。
 
-   ```bash
-   ./scripts/switch-host.sh zz2
-   ```
+## 密钥
 
-4. **Verify**, then **commit and push**. The GitHub copy is what the other host
-   and future rebuilds depend on; an unpushed config exists on one disk.
-
-## What not to do
-
-- **Never** run a standalone `home-manager switch`. Home Manager is embedded in
-  the NixOS module; a standalone switch creates a second profile.
-- Do not decrypt a secret into a project or paste a value into a flake. Use the
-  sops flow.
-- Do not switch a host you have not built, and do not switch `zz` from `zz2`
-  without confirming which host is meant.
-- A change that needs a reboot is not done until the reboot is named.
+`secrets/` 是 sops 加密的。不要打印解密后的值，不要写进文件或日志。解密只发生在需要它的那条命令里。
