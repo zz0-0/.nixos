@@ -4,8 +4,10 @@
 
 ```bash
 ./scripts/build-hosts.sh          # 构建 zz 和 zz2
-nix flake check                   # 求值检查
+nix flake check                   # 完整验证
 ```
+
+新 clone 先跑 `./scripts/setup.sh`（设置 git hooks 路径）。push 前 `.githooks/pre-push` 会跑完整验证。
 
 ## 闸门
 
