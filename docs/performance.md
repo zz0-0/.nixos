@@ -104,6 +104,30 @@ grep -l iHD_drv_video /proc/$(pgrep -f 'brave --type=gpu-process' | head -1)/map
 
 `chrome://gpu` 的 "Video Decode" 应显示 `Hardware accelerated`。
 
+**别让普通程序碰到 dGPU**：任何触碰 NVIDIA 设备的程序都会把它叫醒，而醒着的 dGPU 实测 **3.3 W**（刚唤醒时 9 W+），并且要 **~90 秒**才回去睡。最隐蔽的一条路径是 Vulkan 枚举——Zed 用 wgpu 渲染、Brave 会枚举 Vulkan 设备，两者都能在完全不渲染一帧的情况下把卡弄醒。实测：
+
+```bash
+# 默认：看到三张设备卡，其中一张是 NVIDIA，dGPU 从 suspended 变 active
+vulkaninfo --summary | grep deviceName
+# 只给 Intel 的 ICD：只剩 Intel，dGPU 全程 suspended
+VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json \
+  vulkaninfo --summary | grep deviceName
+```
+
+所以 `nixos/hosts/zz2/modules/gpu.nix` 在会话里设了 Intel-only 的 `VK_DRIVER_FILES`，而 `prime-run` 会把 NVIDIA 的 ICD 加回去——游戏和 CUDA 照常，普通程序看不见那张卡。
+
+**外接显示器**：这台机器的 HDMI 口挂在 **NVIDIA** 上（`card1-HDMI-A-1`），电池上要用它就得让 dGPU 醒着（3.3 W 起）。USB-C / 雷电的显示输出在 **Intel** 侧（`card0-DP-1..4`），核显本来就一直醒着，接外屏不增加任何成本——电池上外接应该走这条路，代价只是一根 C→HDMI/DP 线。
+
+插了 HDMI 没反应时，先看硬件而不是配置：
+
+```bash
+cat /sys/class/drm/card1-HDMI-A-1/status   # 期望 connected；disconnected 说明信号没到 GPU
+wc -c /sys/class/drm/card1-HDMI-A-1/edid   # 0 字节 = 没读到显示器
+cat /sys/class/drm/card0-DP-*/status       # 万一是走扩展坞/USB-C 的，看这里
+```
+
+`disconnected` 且 EDID 为空时，niri 那边没有任何可配的东西——问题在线上、显示器电源、或者 BIOS 里的显卡模式（这台是 Lenovo，`lenovo_wmi_*` 驱动在场）。
+
 **Intel LPMD（仅 zz2）**：`services.intel-lpmd` 把后台活挪到 E-core 并压低封装频率地板。包里按 CPU family 分发配置，`intel_lpmd_config_F6_M204.xml` 正好对应这颗 Core Ultra 7 356H（family 6, model 204）。
 
 ```bash

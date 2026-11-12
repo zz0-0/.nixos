@@ -40,6 +40,10 @@ in
       Description = "Evolution Mail and Calendar";
       After = [ "graphical-session-pre.target" ];
       PartOf = [ "graphical-session.target" ];
+      # Mail/calendar sync is a background app; on battery it can wait until
+      # the charger is back. Same trade as teams-for-linux: the condition also
+      # gates `systemctl --user start`, but the DMS launcher still works.
+      ConditionACPower = true;
     };
     Install = {
       WantedBy = [ "graphical-session.target" ];

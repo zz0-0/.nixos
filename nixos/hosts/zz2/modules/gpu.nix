@@ -81,6 +81,21 @@ in
     powerManagement.finegrained = true;
   };
 
+  # ── Keep ordinary apps off the dGPU ────────────────────────────────────
+  # Anything that touches the NVIDIA device wakes it, and an awake dGPU costs
+  # ~3.3 W idle (measured; ~9 W right after wake) and takes ~90 s to fall back
+  # asleep. Vulkan enumeration is the sneaky path: Zed renders through wgpu and
+  # Brave enumerates Vulkan devices, so both can wake the dGPU without ever
+  # rendering a frame on it.
+  #
+  # Pointing the session's Vulkan loader at the Intel ICD only removes that
+  # path. `prime-run` puts the NVIDIA ICD back, so games and CUDA still work:
+  #   prime-run steam      → both ICDs, offload vars set
+  #   nvidia-smi           → still wakes the GPU on demand
+  environment.sessionVariables = {
+    VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json";
+  };
+
   # ── GPU launcher wrappers ──────────────────────────────────────────────
 
   environment.systemPackages = [
@@ -90,6 +105,8 @@ in
       export __NV_PRIME_RENDER_OFFLOAD=1
       export __GLX_VENDOR_LIBRARY_NAME=nvidia
       export __VK_LAYER_NV_optimus=NVIDIA_only
+      # Undo the Intel-only Vulkan pin from the session (see above).
+      export VK_DRIVER_FILES="/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.json:/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json"
       exec "$@"
     '')
 
