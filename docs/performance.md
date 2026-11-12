@@ -78,6 +78,10 @@ sysctl vm.swappiness vm.dirty_bytes net.ipv4.tcp_congestion_control
 | 60 Hz | 9.52 W | 10.3 h |
 | 60 Hz + 关掉模糊/动画 | 8.33 W | 11.7 h |
 
+要再量任何一项，用 `scripts/power-triage.sh`：只读 sysfs/proc，不需要 root，把窗口内的
+放电功率、CPU 占用、中断率、显示模式和 top 进程一起打出来。换桌面配置、换浏览器、
+怀疑某个应用时，改一项跑一次 60 秒就有数，不用靠"好像省了点"。
+
 **刷新率**：3.94 W 的差额。这条链曾经整条没生效过，原因和验证方式在
 [docs/power.md](power.md)——输出名、`NIRI_SOCKET`、DMS 的显示器配置三处都能让它静默失效。
 

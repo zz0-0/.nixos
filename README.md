@@ -7,6 +7,7 @@ zz / zz2 两台机器的 NixOS + Home Manager。flake + lock 钉住全部输入�
 ```bash
 ./scripts/build-hosts.sh [host]   # 快速构建：切换前用
 ./scripts/switch-host.sh [host]   # 构建 → 差异 → 确认 → 切换（唯一入口）
+./scripts/power-triage.sh [秒数]  # 电池上采功耗，归因到进程/显示/中断
 nix flake check                    # 完整验证：两台都构建
 ```
 
@@ -43,5 +44,4 @@ nix flake check                    # 完整验证：两台都构建
 | [docs/boot-time.md](docs/boot-time.md) | 启动时间花在哪 |
 | [docs/power.md](docs/power.md) | 交流/电池切换时的亮度与刷新率 |
 | [docs/performance.md](docs/performance.md) | 调度器、zram、sysctl、电池与启动调优 |
-| [docs/emacs.md](docs/emacs.md) | Emacs 与 devshell 的 Eglot 接线 |
 | [docs/firmware.md](docs/firmware.md) | fwupd |

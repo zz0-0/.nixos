@@ -128,13 +128,8 @@
             hotkey-overlay.title = "Terminal";
           };
           "Mod+E" = {
-            action.spawn = [
-              "emacsclient"
-              "-c"
-              "-a"
-              ""
-            ];
-            hotkey-overlay.title = "Emacs";
+            action.spawn = "zeditor";
+            hotkey-overlay.title = "Editor";
           };
 
           # Media
