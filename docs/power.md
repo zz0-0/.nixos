@@ -70,6 +70,7 @@ zz2，电池，亮度 150/496，浏览器挂着：
 | 165 Hz | 13.46 W | 7.3 h |
 | 60 Hz | 9.52 W | 10.3 h |
 | 60 Hz + 关掉模糊/动画 | 8.33 W | 11.7 h |
+| 加上 Vulkan pin，Brave + Zed 轻量使用 | 7.30 W | 13.4 h |
 
 数字是 `scripts/power-triage.sh` 采的（电池上跑，60 秒）。改完这条链之后要复核，
 先拔电源，再 `./scripts/power-triage.sh 60`，看 `average draw` 和 `Current mode` 两行。

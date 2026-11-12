@@ -77,6 +77,7 @@ sysctl vm.swappiness vm.dirty_bytes net.ipv4.tcp_congestion_control
 | 165 Hz | 13.46 W | 7.3 h |
 | 60 Hz | 9.52 W | 10.3 h |
 | 60 Hz + 关掉模糊/动画 | 8.33 W | 11.7 h |
+| 加上 Vulkan pin，Brave + Zed 轻量使用 | 7.30 W | 13.4 h |
 
 要再量任何一项，用 `scripts/power-triage.sh`：只读 sysfs/proc，不需要 root，把窗口内的
 放电功率、CPU 占用、中断率、显示模式和 top 进程一起打出来。换桌面配置、换浏览器、
