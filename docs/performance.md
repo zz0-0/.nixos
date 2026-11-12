@@ -113,6 +113,18 @@ journalctl -b -u intel_lpmd
 
 它和 `scx_lavd` 不是一层：lavd 决定一个可运行任务上哪个核，LPMD 限制后台 cgroup 能跑在哪些核上。机器感觉不对时，一次停一个（`systemctl stop intel_lpmd`、`scxctl stop`），都只对本次开机有效。
 
+**休眠（仅 zz2）**：那块 33.9 G 的磁盘 swap 以前是纯占位——zram（优先级 100）吃掉了所有普通内存压力，`swapon --show` 永远是 0 B。`nixos/hosts/zz2/modules/hibernate.nix` 用 `boot.resumeDevice` 把它接上休眠：33.9 G ≥ 30 G 内存，`resume=` 告诉内核开机后去哪里找镜像。低于 5 % 电量时 UPower 也从 `HybridSleep`（没有镜像落点，掉电就丢）改成 `Hibernate`。
+
+```bash
+sudo systemctl hibernate      # 写盘后断电
+# 再按电源键，会话应该原样回来
+journalctl -b | grep -i "PM: Image"   # 期望 "PM: Image successfully loaded"
+```
+
+恢复要 10–20 秒，而且能不能恢复取决于固件和驱动，不是配置。**先手动试一次再依赖它**；如果回来的是全新登录界面，就是镜像没写成/没找到，删掉那个模块即可，没有别的东西依赖它。
+
+**空闲策略**：`~/.config/DankMaterialShell/settings.json` 里电池侧 5 分钟息屏、10 分钟锁屏、30 分钟挂起；插电侧只有 15 分钟息屏+锁屏、不挂起（编译不抑制空闲）。DMS 的六个 timeout 默认全是 0，也就是全禁用，所以这几行是手动设的，不属于仓库。
+
 ## 安全换性能：关闭 CPU 缓解
 
 `nixos/hosts/zz2/modules/boot-tuning.nix` 里的 `mitigations=off`。对系统调用密集的活（编译、VM、Proton 编译着色器）是真实的百分比收益；代价同样真实——本机上已经在跑的代码可以触到那些被关闭的侧信道。攻击者仍需要先拿到本地代码执行，单人笔电上这不是主要威胁，这也是唯一支持这行的理由。

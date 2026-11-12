@@ -8,6 +8,7 @@
     ./hostname.nix
     ./modules/gpu.nix
     ./modules/boot-tuning.nix
+    ./modules/hibernate.nix
     ./modules/intel-lpmd.nix
     ./modules/peripherals.nix
     ./modules/goodix-custom-driver.nix
