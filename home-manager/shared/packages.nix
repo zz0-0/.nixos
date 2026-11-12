@@ -34,14 +34,6 @@
     # Image, Video & Audio Applications
     bluez
     kdePackages.kamoso
-    kdePackages.kdenlive
-    obs-studio
-    aegisub
-    gimp
-    inkscape
-    meshlab
-    mpv
-    python314Packages.hyperframe
 
     # Media & Document Applications
     celluloid
