@@ -105,6 +105,8 @@ grep -l iHD_drv_video /proc/$(pgrep -f 'brave --type=gpu-process' | head -1)/map
 
 `chrome://gpu` 的 "Video Decode" 应显示 `Hardware accelerated`。
 
+**视频硬解到底有没有生效**：暂停和播放各测 60 秒，差值就是解码成本。zz2 实测 1080p：暂停 8.78 W、播放 10.84 W，**差 2.06 W**——软解的 VP9 1080p60 会是 6–10 W 的差。播放时峰值能到 15 W（首帧/大范围重绘），打开 YouTube 那一下的瞬时峰值到过 22 W，那是首屏加载，不是稳态。
+
 **别让普通程序碰到 dGPU**：任何触碰 NVIDIA 设备的程序都会把它叫醒，而醒着的 dGPU 实测 **3.3 W**（刚唤醒时 9 W+），并且要 **~90 秒**才回去睡。最隐蔽的一条路径是 Vulkan 枚举——Zed 用 wgpu 渲染、Brave 会枚举 Vulkan 设备，两者都能在完全不渲染一帧的情况下把卡弄醒。实测：
 
 ```bash
