@@ -32,6 +32,29 @@ in
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
+
+    # VA-API decode on the Intel iGPU. Without `intel-media-driver` libva finds
+    # no iHD driver on this machine and every video — YouTube, calls, streams —
+    # silently decodes on the CPU, which is one of the few remaining ways to
+    # burn 10 W on battery. Brave already ships with
+    # `--enable-features=AcceleratedVideoDecodeLinuxGL` and pins its GPU
+    # process to the Intel render node, so the driver is the only missing piece.
+    #
+    # `vpl-gpu-rt` is the oneVPL runtime for the same Xe media engine; OBS and
+    # ffmpeg use it for hardware encode. Verify after switching — the render
+    # node number flips between boots, so look it up by driver:
+    #   XE=$(for n in /dev/dri/renderD*; do
+    #          [ "$(basename "$(readlink -f "/sys/class/drm/$(basename "$n")/device/driver")")" = xe ] && echo "$n"
+    #        done | head -1)
+    #   LIBVA_DRIVER_NAME=iHD vainfo --display drm --device "$XE"
+    #   → "Intel iHD driver", VAProfileVP9Profile0 / AV1Profile0 entrypoints
+    # In Brave, chrome://gpu must say "Video Decode: Hardware accelerated".
+    # `nvidia-vaapi-driver` stays (it is pulled in by hardware.nvidia); it is
+    # only used when LIBVA_DRIVER_NAME=nvidia, so it does not interfere.
+    extraPackages = with pkgs; [
+      intel-media-driver
+      vpl-gpu-rt
+    ];
   };
 
   hardware.intel-gpu-tools.enable = true;

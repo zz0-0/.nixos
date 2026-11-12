@@ -32,9 +32,14 @@ in
     # nvidia-drm.modeset=1 is added automatically by hardware.nvidia.modesetting.enable
 
     # The loader reads the whole initrd from the FAT ESP before the kernel
-    # starts. The ~40 MB initrd is dominated by the 15 MB Intel microcode
-    # blob and systemd userspace, so compression only gives a small win.
-    # Measure with `systemd-analyze` after rebooting before trimming more.
-    initrd.compressor = "xz";
+    # starts, and the ~40 MB is dominated by the 15 MB Intel microcode blob and
+    # systemd userspace, so the compressor is a read-time/size tradeoff rather
+    # than a space win. zstd decompresses several times faster than xz for a
+    # modestly larger file: the ESP read is sequential and cheap, the
+    # decompression is on the critical path.
+    #
+    # The initrd itself is systemd-based already — nixpkgs removed the scripted
+    # initrd, so there is nothing to opt into here.
+    initrd.compressor = "zstd";
   };
 }

@@ -36,6 +36,12 @@
         "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       ];
+
+      # Downloads, not compiles, are what a rebuild usually waits on. Both
+      # defaults are conservative (http-connections 25, max-substitution-jobs
+      # 16); the substituters are far away, so more concurrent fetches help.
+      http-connections = 32;
+      max-substitution-jobs = 32;
     };
 
     optimise = {

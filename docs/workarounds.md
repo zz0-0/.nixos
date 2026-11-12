@@ -12,6 +12,14 @@
 
 **移除条件**：上游驱动修好后，用不带补丁的构建，确认 `/proc/driver/nvidia/gpus/*/power` 显示 `Enabled (fine-grained)`，且空闲时 `runtime_status` 为 `suspended`。
 
+## nvidia_uvm 延后加载（zz2）
+
+**现象**：对 open 模块，nixpkgs 把 `nvidia_uvm` 直接塞进 `boot.kernelModules`（softdep 那条路对它无效）。`systemd-modules-load` 因此卡约 3 秒，而它是串行启动链的头：modules-load → firewall → NetworkManager → multi-user，占用户空间启动时间的三分之一。
+
+**做法**：不动 `boot.kernelModules`（列表选项没有“减一项”的原语，`mkForce` 会连带吞掉 nixpkgs 以后新增的默认模块），改用 `environment.etc."modules-load.d/nixos.conf"` 覆盖成 `config.boot.kernelModules` 过滤掉 `nvidia_uvm` 的副本；模块仍会在 `multi-user.target` 之后由 `nvidia-uvm-load.service` 载入，CUDA 用得到时它已经在。
+
+**移除条件**：nixpkgs 提供“不加载 nvidia_uvm”的开关，或 open 模块的 softdep 修好（那时删掉 `nixos/hosts/zz2/modules/boot-tuning.nix` 里那段即可）。验证：`systemd-analyze blame | grep modules-load` 从约 2 s 掉到几十毫秒，且 `/dev/nvidia-uvm` 在登录后存在、`nvidia-smi` 正常。
+
 ## systemd-boot 的 LoaderConfigTimeout
 
 **现象**：NVRAM 里的 `LoaderConfigTimeout` 覆盖 `loader.conf`，重建和固件更新都不会清掉它，启动菜单会悄悄变回更长的超时。

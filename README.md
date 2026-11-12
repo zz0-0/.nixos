@@ -42,5 +42,6 @@ nix flake check                    # 完整验证：两台都构建
 | [docs/gpu-power.md](docs/gpu-power.md) | zz2 的 dGPU 运行时电源 |
 | [docs/boot-time.md](docs/boot-time.md) | 启动时间花在哪 |
 | [docs/power.md](docs/power.md) | 交流/电池切换时的亮度与刷新率 |
+| [docs/performance.md](docs/performance.md) | 调度器、zram、sysctl、电池与启动调优 |
 | [docs/emacs.md](docs/emacs.md) | Emacs 与 devshell 的 Eglot 接线 |
 | [docs/firmware.md](docs/firmware.md) | fwupd |

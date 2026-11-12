@@ -74,7 +74,10 @@
           }
         ];
 
-        animations.enable = true;
+        # Animations are a continuous redraw on a 3200x2000 panel: every frame
+        # the compositor draws is work the iGPU has to schedule, and on battery
+        # that is measurable. Off unless there is a reason to want them back.
+        animations.enable = false;
 
         window-rules = [
           {

@@ -40,6 +40,26 @@ let
         fi
       '';
 
+  # Connector numbering is not stable on this machine: the Intel and NVIDIA
+  # GPUs swap the eDP-1/eDP-2 names depending on probe order, and it flipped
+  # after the 7.3.1 -> 7.3.4 update. A hardcoded name therefore works until the
+  # next reboot. The configured name stays as a hint; the panel is whichever
+  # internal connector niri actually reports.
+  panelResolver = ''
+    niri_panel_output() {
+      local outputs="$1"
+      if [[ "$outputs" == *"(${display.output})"* ]]; then
+        printf '%s' "${display.output}"
+        return 0
+      fi
+      if [[ "$outputs" =~ \(((eDP|LVDS)-?[0-9]+)\) ]]; then
+        printf '%s' "''${BASH_REMATCH[1]}"
+        return 0
+      fi
+      return 1
+    }
+  '';
+
   # Runs as the logged-in user, after niri has created its socket.
   niriModeScript = pkgs.writeShellScript "niri-display-power" ''
     set -eu
@@ -56,17 +76,31 @@ let
     fi
     [ -n "$MODE" ] || exit 0
 
-    # niri-session normally sets WAYLAND_DISPLAY, but fall back to the
-    # first compositor socket if a service starts without it.
-    if [ -z "''${WAYLAND_DISPLAY:-}" ]; then
-      for socket in "''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/wayland-*; do
-        [ -S "$socket" ] || continue
-        export WAYLAND_DISPLAY="$(basename "$socket")"
+    # `niri msg` needs NIRI_SOCKET; WAYLAND_DISPLAY alone is not enough (it
+    # answers "NIRI_SOCKET is not set, are you running this within niri?").
+    # The socket name carries niri's pid, so find it rather than guess.
+    if [ -z "''${NIRI_SOCKET:-}" ]; then
+      for sock in "''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/niri.*.sock; do
+        [ -S "$sock" ] || continue
+        export NIRI_SOCKET="$sock"
         break
       done
     fi
 
-    ${config.programs.niri.package}/bin/niri msg output ${display.output} mode "$MODE" 2>/dev/null || true
+    # `niri msg output <name> mode ...` exits 0 even when no such output is
+    # connected — it just queues the change for later. A wrong name would
+    # therefore never fail and never take effect, so resolve the panel from
+    # what niri reports and fail loudly when there is none.
+    ${panelResolver}
+    outputs="$(${config.programs.niri.package}/bin/niri msg outputs 2>&1 || true)"
+    if ! panel="$(niri_panel_output "$outputs")"; then
+      echo "niri-display-power: no internal panel in niri outputs:" >&2
+      printf '%s\n' "$outputs" >&2
+      exit 1
+    fi
+    [ "$panel" = "${display.output}" ] \
+      || echo "niri-display-power: panel is $panel, configured ${display.output}" >&2
+    ${config.programs.niri.package}/bin/niri msg output "$panel" mode "$MODE" >/dev/null 2>&1 || true
   '';
 
   # Runs as root from udev / at boot. Sets brightness and power profile, and
@@ -98,14 +132,25 @@ let
     ${wifiPowerScript}
 
     # If niri is already running, apply the refresh-rate change immediately.
-    # At boot the user service below does it after login.
+    # This is the path that actually runs when the charger is plugged or
+    # unplugged mid-session; the user service below only covers login.
+    #
+    # The IPC socket name carries niri's pid and NIRI_SOCKET is mandatory, so
+    # find the socket instead of assuming the session environment is visible
+    # from a system service (it is not).
     RUNTIME_DIR="/run/user/$(id -u ${username})"
+    ${panelResolver}
     if [ -n "$MODE" ] && [ -d "$RUNTIME_DIR" ]; then
-      for socket in "$RUNTIME_DIR"/wayland-*; do
-        [ -S "$socket" ] || continue
-        XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$(basename "$socket")" \
-          ${config.programs.niri.package}/bin/niri msg output ${display.output} mode "$MODE" 2>/dev/null || true
-        break
+      for sock in "$RUNTIME_DIR"/niri.*.sock; do
+        [ -S "$sock" ] || continue
+        export NIRI_SOCKET="$sock"
+        outputs="$(${config.programs.niri.package}/bin/niri msg outputs 2>&1 || true)"
+        if panel="$(niri_panel_output "$outputs")"; then
+          ${config.programs.niri.package}/bin/niri msg output "$panel" mode "$MODE" >/dev/null 2>&1 || true
+          break
+        fi
+        # No panel in this output list: the compositor is still coming up.
+        # Try the next socket instead of giving up.
       done
     fi
   '';
@@ -130,7 +175,12 @@ in
           output = lib.mkOption {
             type = lib.types.str;
             default = "eDP-1";
-            description = "niri output name for the internal panel.";
+            description = ''
+              niri output name for the internal panel. Only a hint: the
+              connector numbering swaps between eDP-1 and eDP-2 across boots,
+              so the scripts fall back to the first eDP-*/LVDS* output niri
+              reports when this name is not present.
+            '';
           };
           backlight = lib.mkOption {
             type = lib.types.str;

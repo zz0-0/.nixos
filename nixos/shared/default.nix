@@ -14,6 +14,7 @@
     ./i18n.nix
     ./network.nix
     ./nix.nix
+    ./performance.nix
     ./power.nix
     ./programs/evolution.nix
     ./programs/steam.nix
