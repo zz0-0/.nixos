@@ -21,7 +21,9 @@ gc_age="${GC_MAX_AGE:-7d}"
 
 echo
 echo "==> closure diff for $host"
-nix store diff-closures /run/current-system "result-$host" || true
+# Needs the leading ./, or Nix parses "result-zz2" as a flake ref
+# ("cannot find flake 'flake:result-zz2' in the flake registries").
+nix store diff-closures /run/current-system "./result-$host" || true
 
 echo
 if ! $assume_yes; then

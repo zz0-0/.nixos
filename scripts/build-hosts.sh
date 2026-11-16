@@ -21,5 +21,5 @@ done
 echo
 echo "Builds succeeded. Review the closure diff before switching:"
 for host in "${hosts[@]}"; do
-  echo "  nix store diff-closures /run/current-system result-${host}"
+  echo "  nix store diff-closures /run/current-system ./result-${host}"
 done
