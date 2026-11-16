@@ -82,11 +82,13 @@ in
   };
 
   # ── Keep ordinary apps off the dGPU ────────────────────────────────────
-  # Anything that touches the NVIDIA device wakes it, and an awake dGPU costs
-  # ~3.3 W idle (measured; ~9 W right after wake) and takes ~90 s to fall back
-  # asleep. Vulkan enumeration is the sneaky path: Zed renders through wgpu and
-  # Brave enumerates Vulkan devices, so both can wake the dGPU without ever
-  # rendering a frame on it.
+  # Anything that touches the NVIDIA device wakes it, and an awake dGPU is not
+  # cheap. Measured on battery at 0 % utilisation: 8.8 W with the GPU in
+  # runtime D3 vs 22.0 W with it awake (nvidia-smi independently reports
+  # 12.4 W for the card alone). It falls back asleep 20-90 s after the last
+  # client closes. Vulkan enumeration is the sneaky path: Zed renders through
+  # wgpu and Brave enumerates Vulkan devices, so both can wake the dGPU
+  # without ever rendering a frame on it.
   #
   # Pointing the session's Vulkan loader at the Intel ICD only removes that
   # path. `prime-run` puts the NVIDIA ICD back, so games and CUDA still work:
@@ -95,6 +97,16 @@ in
   environment.sessionVariables = {
     VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json";
   };
+
+  # sessionVariables only reaches the systemd user manager once the compositor
+  # runs `systemctl --user import-environment`. Units that start before that —
+  # teams-for-linux does, 4 s after graphical-session-pre.target — miss it and
+  # still enumerate the NVIDIA ICD (verified: VK_DRIVER_FILES absent from the
+  # running teams process). environment.d is read when the user manager starts,
+  # before any unit, so it covers those too.
+  environment.etc."environment.d/10-vulkan-intel.conf".text = ''
+    VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json
+  '';
 
   # ── GPU launcher wrappers ──────────────────────────────────────────────
 
@@ -118,4 +130,58 @@ in
       exec ${pkgs.wl-mirror}/bin/wl-mirror "$@"
     '')
   ];
+
+  # ── Runtime D3 is decided once per boot ────────────────────────────────
+  # The patched probe (nvidia-rtd3-7.3.patch) runs in an nv-probe kthread.
+  # When its filp_open() loses the root-fs race the driver reports
+  # "Runtime D3 status: Not supported" and disables RTD3 for the *whole
+  # boot*: the dGPU then sits in D0 at 0 % utilisation drawing ~13 W.
+  # Nothing in top, powertop or nvidia-smi shows it — the boot looks and
+  # behaves completely normal at ~25 W on battery.
+  #
+  # So verify it once at boot, while nothing holds the module yet, and
+  # re-probe when it came up wrong. The failure is per-probe, so a second
+  # probe almost always wins. If all three lose, the unit fails loudly in
+  # `systemctl --failed` instead of hiding 13 W for three hours.
+  systemd.services.nvidia-rtd3-check = {
+    description = "Verify NVIDIA runtime D3 is enabled, re-probe if not";
+    wantedBy = [ "multi-user.target" ];
+    # Must run before any compositor opens /dev/nvidia*.
+    before = [ "greetd.service" ];
+    after = [ "systemd-modules-load.service" ];
+    path = [
+      pkgs.kmod
+      pkgs.gnugrep
+      pkgs.coreutils
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      status_file="$(ls /proc/driver/nvidia/gpus/*/power 2>/dev/null | head -n1)"
+      [ -n "$status_file" ] || exit 0
+
+      for attempt in 1 2 3; do
+        if grep -q 'Runtime D3 status:[[:space:]]*Enabled' "$status_file"; then
+          echo "runtime D3 enabled (attempt $attempt)"
+          exit 0
+        fi
+        grep 'Runtime D3 status' "$status_file" >&2 || true
+        # greetd has not started yet, so nothing can hold the module.
+        if ! modprobe -r nvidia_drm nvidia_modeset nvidia_uvm nvidia; then
+          echo "cannot unload the nvidia modules, leaving them alone" >&2
+          break
+        fi
+        modprobe nvidia_drm || break
+        sleep 1
+      done
+
+      # Never leave the boot without nvidia-drm: prime-run needs it.
+      modprobe nvidia_drm 2>/dev/null || true
+      echo "runtime D3 still disabled: the dGPU will not sleep this boot" >&2
+      echo "expect ~25 W on battery until the next reboot" >&2
+      exit 1
+    '';
+  };
 }
