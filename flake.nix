@@ -58,8 +58,24 @@
       # DMS Go tests bind unix sockets under TMPDIR; Nix's long build paths
       # exceed the 108-byte sockaddr_un limit and fail with EINVAL, so skip
       # checks (same rationale as niriPkg above).
-      dmsPkg = (inputs.dankMaterialShell.lib.mkDmsShell pkgs).overrideAttrs (_: {
+      #
+      # Second patch: in 2.2-beta the power menu closes itself from inside
+      # executeAction(), i.e. *before* emitting the action signal. Closing
+      # destroys the component that owns the signal, so the menu disappears and
+      # nothing happens — no poweroff, no reboot, not even lock or "restart
+      # shell", and logind never sees a request. Deferring the close with
+      # Qt.callLater keeps the object alive until the signal is delivered.
+      # Drop this once upstream emits the action before closing.
+      dmsPkg = (inputs.dankMaterialShell.lib.mkDmsShell pkgs).overrideAttrs (old: {
         doCheck = false;
+        postFixup = (old.postFixup or "") + ''
+          for f in "$out/share/quickshell/dms/Modules/DBar/Popouts/PowerMenuPopout.qml" \
+                   "$out/share/quickshell/dms/Modals/PowerMenuModal.qml"; do
+            substituteInPlace "$f" \
+              --replace-fail 'onCloseRequested: root.close()' \
+              'onCloseRequested: Qt.callLater(() => root.close())'
+          done
+        '';
       });
 
       # CreamLinux (DLC manager for Steam). WEBKIT_DISABLE_DMABUF_RENDERER is
