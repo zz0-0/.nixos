@@ -60,6 +60,7 @@
     pulseaudio
 
     # AI
+    claude-code
     deepseek-harness
   ];
 }
