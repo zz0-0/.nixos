@@ -41,7 +41,7 @@
     let
       username = "zz";
       system = "x86_64-linux";
-      systemVersion = "26.05";
+      stateVersion = "26.05";
 
       pkgs = import nixpkgs {
         inherit system;
@@ -91,7 +91,7 @@
       specialArgs = {
         inherit
           username
-          systemVersion
+          stateVersion
           system
           niriPkg
           dmsPkg
@@ -173,14 +173,26 @@
         }
       );
 
-      # `nix flake check` builds and validates both hosts. Home Manager is
-      # embedded in each NixOS system, so there is no separate HM output.
-      checks.x86_64-linux = builtins.listToAttrs (
-        map (name: {
-          name = "nixos-${name}";
-          value = self.nixosConfigurations.${name}.config.system.build.toplevel;
-        }) (builtins.attrNames hosts)
-      );
+      # `nix flake check` builds and validates both hosts, and lints the tree.
+      # Home Manager is embedded in each NixOS system, so there is no separate
+      # HM output.
+      checks.x86_64-linux =
+        (builtins.listToAttrs (
+          map (name: {
+            name = "nixos-${name}";
+            value = self.nixosConfigurations.${name}.config.system.build.toplevel;
+          }) (builtins.attrNames hosts)
+        ))
+        // {
+          lint = pkgs.runCommand "lint" {
+            nativeBuildInputs = [ pkgs.statix pkgs.deadnix ];
+          } ''
+            cd ${./.}
+            statix check --config statix.toml .
+            deadnix --fail .
+            touch $out
+          '';
+        };
 
       devShells.x86_64-linux.default = pkgs.mkShell {
         packages =

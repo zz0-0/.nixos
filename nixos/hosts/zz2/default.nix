@@ -1,4 +1,4 @@
-{ ... }:
+{ stateVersion, ... }:
 
 {
   imports = [
@@ -39,5 +39,5 @@
   # Disable WiFi power saving while on AC; re-enable it on battery.
   laptop.wifi.interface = "wlp0s20f3";
 
-  system.stateVersion = "26.05";
+  system.stateVersion = stateVersion;
 }

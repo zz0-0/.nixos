@@ -1,4 +1,4 @@
-{ ... }:
+{ stateVersion, ... }:
 
 {
   imports = [
@@ -17,5 +17,5 @@
   # leaves brightness and mode alone on this host. Add values here if you
   # want the same power-state switching as zz2.
 
-  system.stateVersion = "26.05";
+  system.stateVersion = stateVersion;
 }

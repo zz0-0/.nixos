@@ -3,7 +3,7 @@
   niri,
   dankMaterialShell,
   username,
-  systemVersion,
+  stateVersion,
   niriPkg,
   ...
 }:
@@ -51,8 +51,7 @@
   ];
 
   home = {
-    inherit username;
+    inherit username stateVersion;
     homeDirectory = "/home/${username}";
-    stateVersion = systemVersion;
   };
 }

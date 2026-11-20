@@ -8,7 +8,7 @@ zz / zz2 两台机器的 NixOS + Home Manager。flake + lock 钉住全部输入�
 ./scripts/build-hosts.sh [host]   # 快速构建：切换前用
 ./scripts/switch-host.sh [host]   # 构建 → 差异 → 确认 → 切换（唯一入口）
 ./scripts/power-triage.sh [秒数]  # 电池上采功耗，归因到进程/显示/中断
-nix flake check                    # 完整验证：两台都构建
+nix flake check                    # 完整验证：两台都构建 + statix/deadnix
 ```
 
 `nix flake check` 是**验证**；`build-hosts.sh` 是切换前的**快速构建**。两者都不改动系统。
