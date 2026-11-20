@@ -62,5 +62,6 @@
     # AI
     claude-code
     deepseek-harness
+    opencode
   ];
 }
