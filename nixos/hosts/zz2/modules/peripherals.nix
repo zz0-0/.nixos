@@ -15,10 +15,21 @@
     "i2c-designware-core"
   ];
 
-  # Kernel params for Goodix touchpad / laptop hardware
+  # Kernel params for the PS/2 keyboard. The touchpad is I2C HID (GXTP5100 on
+  # i2c-designware), so none of this is for it.
   boot.kernelParams = [
-    # Some Goodix touchpads need I2C controller reset at boot
     "i8042.nopnp"
+
+    # The EC emulates the internal keyboard on the i8042 KBD port. Probing the
+    # AUX multiplexing controller at boot disturbs it: occasionally the kernel
+    # logs "Spurious ACK" / "Unknown key released" and the keyboard then stops
+    # delivering events until the next reboot (pointer and on-screen keyboard
+    # keep working, so the desktop is healthy). Same mechanism as the Fujitsu
+    # LIFEBOOK U7410 nomux quirk upstream.
+    #
+    # No PS/2 pointing device exists here: serio1-4 are unbound and psmouse has
+    # no devices, so mux mode buys nothing and costs the keyboard.
+    "i8042.nomux=1"
   ];
 
   # If touchpad or WiFi still doesn't work, run these and share output:

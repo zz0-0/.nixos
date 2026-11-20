@@ -36,6 +36,14 @@
 
 **移除条件**：合成器自己能可靠处理交流/电池切换，或 udev 能保证在合成器之后触发。验证：电池开机，检查当前模式是 `60.001` 而不是 `165`。
 
+## 内置键盘偶发失灵（zz2）
+
+**现象**：冷启动后内置键盘完全不送键——鼠标和屏幕上的虚拟键盘都正常，登录前（greeter）和登录后一样，只能重启。20 次启动里抓到过 1 次，那次的内核日志比平时多一条 `atkbd serio0: Spurious ACK on isa0060/serio0`，而每次开机固定出现的三条 `Unknown key released` 少了两条。机制是 EC 在 i8042 KBD 端口上模拟这个键盘，开机时 AUX 复用控制器的探测会打扰它。
+
+**做法**：`nixos/hosts/zz2/modules/peripherals.nix` 加 `i8042.nomux=1`。这台机器的触摸板是 I2C HID（GXTP5100），serio1-4 没有绑定驱动、`psmouse` 没有设备，关掉 mux 没有损失。
+
+**移除条件**：内核给这台机器加 DMI nomux quirk，或 EC/BIOS 修好之后不再出现 `Spurious ACK`。验证：`journalctl -b -k | grep -c 'Detected active multiplexing controller'` 现在为 1，加上参数后应为 0；接着连续冷启动两周不再为键盘重启。
+
 ## Goodix 触摸板（zz2）
 
 **现象**：需要打过补丁的 `hid-multitouch`（gt7868q）。
